@@ -49,6 +49,8 @@
               <div id="menu-container">
                 <button id="start-game-btn" class="btn">Start Game</button>
               </div>
+              <!-- High Scores for Start Screen -->
+              <div id="high-scores-start" class="high-scores-list"></div>
             </div>
           </div>
 
@@ -56,6 +58,8 @@
           <canvas id="game-canvas"></canvas>
           <div id="game-over" class='show hide'>
             <h2>Game Over</h2>
+            <!-- High Scores for Game Over Screen -->
+            <div id="high-scores-gameover" class="high-scores-list"></div>
             <button class='btn new-game-btn'>New Game</button>
           </div>
           <div id="level-display" class="centered-text hide">
@@ -119,6 +123,8 @@
         window.gameView = new Asteroids.GameView(context);
         // Start the attract mode loop immediately
         gameView.startAttractModeLoop();
+        // Display high scores on initial load
+        Asteroids.Util.displayHighScores('high-scores-start');
 
         // Add listener for the new start game button
         $('#start-game-btn').on('mouseup', function() {

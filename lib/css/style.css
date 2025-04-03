@@ -336,3 +336,56 @@ h5.fire {
 #countdown-display {
   /* Uses .hide class from existing CSS */
 }
+
+/* High Score List Styles */
+.high-scores-list {
+  margin-top: 20px; /* Add some space */
+  padding: 10px;
+  max-height: 250px; /* Limit height if list is long */
+  overflow-y: auto; /* Allow scrolling */
+  color: white; /* Text color for start screen */
+  text-align: left; /* Align text left */
+  background-color: rgba(0, 0, 0, 0.3); /* Slight background */
+  border-radius: 5px;
+}
+
+/* Specific adjustments for game over screen if needed */
+#game-over .high-scores-list {
+    color: black; /* Adjust text color for lighter game over bg if needed */
+    /* Example: Adjust background or margin */
+    margin-bottom: 15px;
+    background-color: rgba(255, 255, 255, 0.4); /* Lighter background for contrast */
+}
+
+.high-scores-list h3 {
+    font-size: 24px;
+    color: orange; /* Match other headings */
+    text-align: center;
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 1px black;
+}
+
+.high-scores-list ol {
+    list-style: none; /* Remove default numbers */
+    padding-left: 0;
+    margin: 0;
+}
+
+.high-scores-list li {
+    font-family: monospace; /* Use monospace for alignment */
+    font-size: 16px;
+    padding: 2px 5px;
+    white-space: pre; /* Preserve spacing */
+}
+
+.high-scores-list li span {
+    display: inline-block;
+    width: 2.5em; /* Width for rank number */
+    text-align: right;
+    margin-right: 0.5em;
+}
+
+.high-scores-list p { /* Style for 'No scores yet' */
+    text-align: center;
+    font-style: italic;
+}
