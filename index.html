@@ -30,11 +30,12 @@
     <script src="lib/javascripts/asteroid.js"></script>
     <script src="lib/javascripts/bullet.js"></script>
     <script src="lib/javascripts/explosion.js"></script>
-    <script src="lib/javascripts/game.js"></script>
-    <script src="lib/javascripts/gameView.js"></script>
     <script src="lib/javascripts/ship.js"></script>
     <script src="lib/javascripts/ufo.js"></script>
     <script src="lib/javascripts/ufoBullet.js"></script>
+    <script src="lib/javascripts/powerup.js"></script>
+    <script src="lib/javascripts/game.js"></script>
+    <script src="lib/javascripts/gameView.js"></script>
   </head>
 
   <body>
@@ -90,7 +91,11 @@
       </section>
     </section>
     <script>
-      $(document).ready(function() {
+      // Define Frame_Rate globally BEFORE other scripts load
+      window.Frame_Rate = 2; 
+
+      // Wrap game initialization in window.onload
+      window.onload = function() {
         windowHeight = $(window).innerHeight();
         $('#sidebar').css('height', windowHeight - 5);
         $('#board').css('height', windowHeight - 5);
@@ -102,12 +107,12 @@
         canvasEl.height = $('#board').innerHeight();
         canvasEl.width = $('#board').innerWidth();
         var context = canvasEl.getContext("2d");
-        Frame_Rate = 2;
-
-        currentGame = new Asteroids.Game(canvasEl.width, canvasEl.height);
-        gameView = new Asteroids.GameView(context);
+        
+        // Initialize game AFTER all scripts are loaded
+        window.currentGame = new Asteroids.Game(canvasEl.width, canvasEl.height);
+        window.gameView = new Asteroids.GameView(context);
         gameView.start();
-      });
+      };
     </script>
     <script charset="utf-8"></script>
   </body>
