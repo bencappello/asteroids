@@ -1,20 +1,22 @@
-body, button, h2, h3, h4, h5, span, div, section {
+body, button, h2, h3, h4, h5, span, div, section, input {
   margin: 0;
   padding: 0;
   border: 0;
   outline: 0;
   font: inherit;
-  box-sizing: inherit;
+  box-sizing: border-box;
   text-align: inherit;
   text-decoration: inherit;
   vertical-align: inherit;
   color: inherit;
   background: transparent;
-  /*font-family: Sans-serif;*/
+  font-family: 'Press Start 2P', Courier, monospace;
+  text-transform: uppercase;
 }
 
 body {
-  background: black;
+  background: #000010;
+  color: #FFFFFF;
   width: 100%;
   height: 100%;
 }
@@ -36,9 +38,11 @@ body {
   width: 200px;
   min-height: 500px;
   z-index: 1;
-  background: black;
+  background: #000010;
   display: block;
   position: relative;
+  border-right: 3px solid #00FFFF;
+  box-shadow: -5px 0 15px -3px #00FFFF;
 }
 
 #sidebar header {
@@ -47,153 +51,100 @@ body {
 }
 
 #sidebar header img {
-  width: 200px;
-  height: 20px;
+  display: none;
 }
 
 .side-frame {
   padding: 10px 0;
-  border-top: 1px solid black;
-  outline: 1px solid white;
-  background: #36353B;
-  margin-top: 1px;
-}
-
-.side-frame {
-  border-bottom: 1px solid black;
+  border-top: 1px solid #00FFFF80;
+  border-bottom: 1px solid #00FFFF80;
+  background: #000010;
+  margin: 5px 10px;
 }
 
 #sidebar h3 {
-  font-weight: 700;
-  font-size: 25px;
-  color: black;
-  text-align: center;
-  letter-spacing: 7px;
-}
-
-h3#controls {
-  margin-top: 20px;
-  /*text-decoration: underline;*/
-  color: #CCCCCC;
-}
-
-#sidebar h4 {
-  font-weight: 700;
-  font-size: 15px;
-  color: #CCCCCC;
+  font-weight: normal;
+  font-size: 16px;
+  color: #FF00FF;
   text-align: center;
   letter-spacing: 2px;
-  margin-top: 10px;
+  text-shadow: 0 0 5px #FF00FF, 0 0 10px #FF00FF;
   margin-bottom: 5px;
 }
 
+#sidebar h4 {
+  font-weight: normal;
+  font-size: 10px;
+  color: #FFFF00;
+  text-align: center;
+  letter-spacing: 1px;
+  margin-top: 15px;
+  margin-bottom: 2px;
+  text-shadow: 0 0 3px #FFFF00;
+}
+
 #sidebar h5 {
-  font-weight: 700;
-  font-size: 15px;
+  font-weight: normal;
+  font-size: 14px;
+  color: #FFFFFF;
   text-align: center;
-  letter-spacing: 2px;
-  margin-top: 5px;
-  margin-bottom: 20px;
+  letter-spacing: 1px;
+  margin-top: 2px;
+  margin-bottom: 15px;
+  text-shadow: 0 0 3px #FFFFFF;
 }
 
-h5.turn {
-  color: #6E92FF;
+/* Specific size for 'space' text */
+#sidebar h5.fire {
+  font-size: 12px; /* Smaller size to match icon appearance */
 }
 
-h5.thrust {
-  color: #71DB5E;
-}
-
-h5.fire {
-  color: orange;
-}
-
-#score {
-  font-size: 20px;
-  color: orange;
+#score, #level, #lives {
+  font-size: 18px;
+  color: #FFFFFF;
   text-align: center;
   margin: auto;
-  letter-spacing: 5px;
-  font-family: sans-serif;
+  letter-spacing: 3px;
   text-shadow:
-    1px 0 0 black,
-    -1px 0 0 black,
-    0 1px 0 black,
-    0 -1px 0 black,
-    1px 1px black,
-    -1px -1px 0 black,
-    1px -1px 0 black,
-    -1px 1px 0 black;
-}
-
-#level {
-  font-size: 20px;
-  color: orange;
-  text-align: center;
-  margin: auto;
-  letter-spacing: 5px;
-  font-family: sans-serif;
-  text-shadow:
-    1px 0 0 black,
-    -1px 0 0 black,
-    0 1px 0 black,
-    0 -1px 0 black,
-    1px 1px black,
-    -1px -1px 0 black,
-    1px -1px 0 black,
-    -1px 1px 0 black;
-}
-
-#lives {
-  font-weight: 700;
-  font-size: 20px;
-  color: #1A1061;
-  text-align: center;
-  margin: auto;
-  letter-spacing: 5px;
-  font-family: sans-serif;
-  text-shadow:
-    0.5px 0 0 black,
-    -0.5px 0 0 black,
-    0 0.5px 0 black,
-    0 -0.5px 0 black,
-    0.5px 0.5px black,
-    -0.5px -0.5px 0 black,
-    0.5px -0.5px 0 black,
-    -0.5px 0.5px 0 black;
+    0 0 3px #FFFFFF,
+    0 0 6px #FFFFFF;
 }
 
 .btn {
   display: block;
-  color: white;
-  background: #1A2366;
-  border-top: 1px solid white;
-  border-bottom: 1px solid white;
+  color: #FFFFFF;
+  background: #000010;
+  border: 2px solid #00FFFF;
   border-left: none;
   border-right: none;
   border-radius: 0;
   padding: 10px 0;
+  margin: 10px 10px 20px 10px;
 
-  font-weight: 900;
-  font-size: 25px;
+  font-weight: normal;
+  font-size: 16px;
   text-align: center;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 5px #FFFFFF, 0 0 10px #FFFFFF;
+  box-shadow: 0 0 8px #00FFFF, inset 0 0 8px #00FFFF;
 
-  -webkit-transition: color 0.3s, background-color 0.3s;
-  transition: color 0.3s, background-color 0.3s;
+  -webkit-transition: color 0.2s, background-color 0.2s, box-shadow 0.2s, text-shadow 0.2s;
+  transition: color 0.2s, background-color 0.2s, box-shadow 0.2s, text-shadow 0.2s;
 }
 
 .btn:hover {
   cursor: pointer;
-  background: #C2C2C2;
-  color: black;
-  font-weight: 700;
+  background: #00FFFF;
+  color: #000010;
+  box-shadow: 0 0 15px #00FFFF, inset 0 0 10px #00FFFF, 0 0 25px #FFFFFF;
+  text-shadow: 0 0 5px #000010;
 }
 
-.new-game-btn {
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 20px;
+/* Style sidebar new game button specifically */
+#sidebar .new-game-btn {
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Removed .menu-btn specific styles as we now have a single centered button */
@@ -217,39 +168,40 @@ h5.fire {
   z-index: 1;
   display: block;
   position: absolute;
+  top: 0;
   left: 200px;
-  background: url('../images/space2.jpg') center no-repeat;
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;
+  background-color: #000010;
+  overflow: hidden;
 }
 
 #game-over {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-left: -120px;
-  margin-top: -35px;
-  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 16, 0.85);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+#game-over.hide {
+  display: none !important;
 }
 
 #game-over h2 {
   display: block;
-  color: orange;
-  font-size: 60px;
+  color: #FF00FF;
+  font-size: 50px;
   margin-left: auto;
   margin-right: auto;
-  margin-bottom: 10px;
-  text-shadow:
-    1px 0 0 black,
-    -1px 0 0 black,
-    0 1px 0 black,
-    0 -1px 0 black,
-    1px 1px black,
-    -1px -1px 0 black,
-    1px -1px 0 black,
-    -1px 1px 0 black;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px #FF00FF, 0 0 20px #FF00FF, 0 0 30px #FFFFFF;
+  animation: blink-red 1s infinite alternate;
 }
 
 .show {
@@ -257,35 +209,39 @@ h5.fire {
 }
 
 .hide {
-  display: none;
+  display: none !important;
 }
 
 #modal-screen {
-  background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  position: absolute;
-  z-index: 3;
+  background: rgba(0, 0, 16, 0.85);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#modal-screen.hide {
+  display: none !important;
 }
 
 #menu {
-  position: absolute;
-  top: 50%;
-  left:  50%;
-  transform: translate(-50%, -50%);
-  -webkit-transform: translate(-50%, -50%);
-  -moz-transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
-  width: 500px;
-  height: auto;
-  min-height: 200px;
-  background-color: rgba(255, 255, 255, 0.5);
-  z-index: 4;
+  z-index: 11;
+  text-align: center;
+  width: 80%;
+  max-width: 600px;
+  padding: 30px;
+  border: 3px solid #00FFFF;
+  box-shadow: 0 0 15px #00FFFF, inset 0 0 15px #00FFFF;
+  background: #000010;
 }
 
 #menu-container {
-  text-align: center;
-  padding: 20px;
+  /* No specific styles needed now */
 }
 
 #menu-container .btn {
@@ -297,200 +253,188 @@ h5.fire {
   border-radius: 5px;
 }
 
-#menu h2 {
-  font-size: 60px;
-  color: black;
-  text-align: center;
-  margin-bottom: 40px;
+#start-game-btn {
+  width: 60%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 20px;
 }
 
 .centered-text {
   position: absolute;
-  top: 40%;
+  top: 30%;
   left: 50%;
   transform: translate(-50%, -50%);
-  -webkit-transform: translate(-50%, -50%);
-  -moz-transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
-  z-index: 2;
+  z-index: 5;
+  text-align: center;
+  color: #FFFF00;
+  text-shadow: 0 0 5px #FFFF00, 0 0 10px #FFFF00;
 }
 
 .centered-text h2 {
-  display: block;
-  color: orange;
-  font-size: 60px;
-  text-align: center;
-  text-shadow:
-    1px 0 0 black,
-    -1px 0 0 black,
-    0 1px 0 black,
-    0 -1px 0 black,
-    1px 1px black,
-    -1px -1px 0 black,
-    1px -1px 0 black,
-    -1px 1px 0 black;
+  font-size: 40px;
 }
 
-/* Initially hide these elements */
 #level-display,
 #countdown-display {
-  /* Uses .hide class from existing CSS */
+  /* General positioning handled by .centered-text */
 }
 
-/* High Score List Styles */
 .high-scores-list {
-  margin-top: 20px; /* Add some space */
-  padding: 10px;
-  max-height: 250px; /* Limit height if list is long */
-  overflow-y: auto; /* Allow scrolling */
-  color: white; /* Text color for start screen */
-  text-align: left; /* Align text left */
-  background-color: rgba(0, 0, 0, 0.3); /* Slight background */
-  border-radius: 5px;
-}
-
-/* Specific adjustments for game over screen if needed */
-#game-over .high-scores-list {
-    color: black; /* Adjust text color for lighter game over bg if needed */
-    /* Example: Adjust background or margin */
-    margin-bottom: 15px;
-    background-color: rgba(255, 255, 255, 0.4); /* Lighter background for contrast */
+  margin: 20px auto;
+  max-width: 500px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #00FF00;
+  box-shadow: 0 0 10px #00FF00, inset 0 0 10px #00FF00;
+  color: #00FF00;
+  text-shadow: 0 0 3px #00FF00, 0 0 6px #00FF00;
 }
 
 .high-scores-list h3 {
-    font-size: 24px;
-    color: orange; /* Match other headings */
-    text-align: center;
-    margin-bottom: 10px;
-    text-shadow: 1px 1px 1px black;
+  color: #00FFFF;
+  font-size: 20px;
+  margin-bottom: 15px;
+  text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF;
+  letter-spacing: 3px;
 }
 
 .high-scores-list ol {
-    list-style: none; /* Remove default numbers */
-    padding-left: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
 }
 
 .high-scores-list li {
-    font-family: monospace; /* Use monospace for alignment */
-    font-size: 16px;
-    padding: 2px 5px;
-    white-space: pre; /* Preserve spacing */
+  font-size: 12px;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+  white-space: pre;
+  line-height: 1.4;
 }
 
-.high-scores-list li span {
-    display: inline-block;
-    width: 2.5em; /* Width for rank number */
-    text-align: right;
-    margin-right: 0.5em;
+.high-scores-list p {
+  font-style: italic;
+  font-size: 12px;
+  color: #aaaaaa;
+  text-shadow: none;
 }
 
-.high-scores-list p { /* Style for 'No scores yet' */
-    text-align: center;
-    font-style: italic;
-}
-
-/* Initials Input Modal Styles */
 .modal-overlay {
-    position: fixed; /* Cover entire screen */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7); /* Darker overlay */
-    z-index: 10; /* Above everything else */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 16, 0.9);
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-overlay.hide {
+  display: none !important;
 }
 
 .modal-content {
-    background-color: #333; /* Dark background */
-    padding: 30px 40px;
-    border-radius: 10px;
-    border: 2px solid orange;
-    text-align: center;
-    color: white;
+  background: #000010;
+  padding: 30px;
+  border: 3px solid #FF00FF;
+  box-shadow: 0 0 15px #FF00FF, inset 0 0 15px #FF00FF;
+  text-align: center;
+  color: #FFFFFF;
+  width: 90%;
+  max-width: 400px;
 }
 
 .modal-content h3 {
-    font-size: 28px;
-    color: orange;
-    margin-bottom: 15px;
+  font-size: 20px;
+  color: #FFFF00;
+  margin-bottom: 15px;
+  text-shadow: 0 0 5px #FFFF00, 0 0 10px #FFFF00;
 }
 
 .modal-content p {
-    margin-bottom: 20px;
-    font-size: 18px;
+  font-size: 12px;
+  margin-bottom: 20px;
+  color: #cccccc;
 }
 
 #initials-input {
-    display: block;
-    margin: 0 auto 25px auto; /* Center horizontally */
-    width: 100px; /* Fixed width */
-    padding: 10px;
-    font-size: 24px;
-    text-align: center;
-    text-transform: uppercase; /* Force uppercase */
-    background-color: #eee;
-    border: 1px solid #aaa;
-    border-radius: 5px;
-    color: black;
-    font-family: monospace;
-    letter-spacing: 0.2em; /* Space out letters */
+  display: block;
+  width: 80%;
+  margin: 0 auto 20px auto;
+  padding: 10px;
+  background: #111125;
+  border: 2px solid #00FFFF;
+  color: #FFFFFF;
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  box-shadow: inset 0 0 5px #00FFFF;
+}
+
+#initials-input:focus {
+  outline: none;
+  box-shadow: inset 0 0 8px #00FFFF, 0 0 10px #00FFFF;
 }
 
 #submit-initials-btn {
-    /* Reuse existing .btn styles by default */
-    /* Add specific overrides if needed */
-    display: inline-block; /* Override display: block from .btn if needed for centering */
-    width: auto;
-    padding-left: 30px;
-    padding-right: 30px;
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+  border-color: #FF00FF;
+  box-shadow: 0 0 8px #FF00FF, inset 0 0 8px #FF00FF;
 }
 
-/* Ensure hide class works */
-.modal-overlay.hide {
-    display: none;
+#submit-initials-btn:hover {
+  background: #FF00FF;
+  box-shadow: 0 0 15px #FF00FF, inset 0 0 10px #FF00FF, 0 0 25px #FFFFFF;
+  border-color: #FF00FF;
 }
 
-/* Adjustments for high scores list specifically within the start menu */
 #menu .high-scores-list {
-    margin-top: 0;
-    margin-bottom: 20px;
-    width: 80%;
-    margin-left: auto;
-    margin-right: auto;
-    color: #222;
-    background-color: transparent;
-    border-radius: 0;
-    max-height: none; /* Remove max-height as columns handle length */
-    overflow-y: visible; /* Remove scrollbar */
+  /* Keep consistent with general high score style */
 }
 
 #menu .high-scores-list h3 {
-    color: #1A2366;
-    text-shadow: none;
+  /* Keep consistent */
 }
 
 #menu .high-scores-list ol,
-#menu .high-scores-list p {
-    /* Ensure readability */
+#menu .high-scores-list li {
+  /* Keep consistent */
 }
 
-/* Container for score columns */
 .score-columns {
-    display: flex;
-    justify-content: space-around; /* Space out columns */
-    align-items: flex-start; /* Align columns at the top */
+  display: flex;
+  justify-content: space-between;
 }
 
-/* Style for individual score column */
 .score-column {
-    flex: 1; /* Allow columns to share space */
-    /* Optional: Add some padding or max-width if needed */
-    padding: 0 10px; /* Add horizontal padding between columns */
-    list-style: none; /* Ensure list style is none */
-    padding-left: 0;  /* Ensure no default padding */
-    margin: 0;       /* Ensure no default margin */
+  width: 45%;
+}
+
+/* Style the 'New Game' button within the game over screen */
+#game-over .new-game-btn {
+  margin-top: 30px;
+  width: 60%;
+  max-width: 300px;
+  border-color: #FFFF00;
+  box-shadow: 0 0 8px #FFFF00, inset 0 0 8px #FFFF00;
+}
+
+#game-over .new-game-btn:hover {
+  background: #FFFF00;
+  border-color: #FFFF00;
+  box-shadow: 0 0 15px #FFFF00, inset 0 0 10px #FFFF00, 0 0 25px #FFFFFF;
+}
+
+/* Define blink animation */
+@keyframes blink-red {
+  from { color: #FF00FF; text-shadow: 0 0 10px #FF00FF, 0 0 20px #FF00FF, 0 0 30px #FFFFFF; }
+  to   { color: #FF60FF; text-shadow: 0 0 5px #FF00FF, 0 0 10px #FF00FF; }
 }

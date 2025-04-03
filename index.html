@@ -4,6 +4,10 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>Asteroids</title>
     <link href="lib/css/style.css" rel="stylesheet" type="text/css" charset="utf-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <link rel="apple-touch-icon" sizes="57x57" href="lib/images/favicons/apple-touch-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="lib/images/favicons/apple-touch-icon-60x60.png">
@@ -92,13 +96,13 @@
         <h4>Fire</h4>
         <h5 class='fire'>space</h5>
         <h4>Forward Thrust</h4>
-        <h5 class='thrust'>↑</h5>
+        <h5 class='thrust'><i class="fa-solid fa-arrow-up"></i></h5>
         <h4>Backward Thrust</h4>
-        <h5 class='thrust'>↓</h5>
+        <h5 class='thrust'><i class="fa-solid fa-arrow-down"></i></h5>
         <h4>Rotate Left</h4>
-        <h5 class='turn'>←</h5>
+        <h5 class='turn arrow-left'><i class="fa-solid fa-arrow-left"></i></h5>
         <h4>Rotate Right</h4>
-        <h5 class='turn'>→</h5>
+        <h5 class='turn arrow-right'><i class="fa-solid fa-arrow-right"></i></h5>
       </section>
     </section>
 
@@ -106,7 +110,7 @@
     <div id="initials-input-modal" class="modal-overlay hide">
         <div class="modal-content">
             <h3>High Score!</h3>
-            <p>Enter your initials (3 characters max):</p>
+            <p>Enter your initials:</p>
             <input type="text" id="initials-input" maxlength="3" autocomplete="off" spellcheck="false">
             <button id="submit-initials-btn" class="btn">Submit</button>
         </div>
