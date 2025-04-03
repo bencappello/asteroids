@@ -151,27 +151,22 @@
 
         // Add listener for the initials submit button
         $('#submit-initials-btn').on('click', function() {
-            const initials = $('#initials-input').val();
-            if (initials && initials.trim().length > 0) {
-                // Assume 'score' is globally accessible here, or pass it somehow
-                // A safer approach might be to store the score temporarily when the modal is shown
-                window.currentGame.lastScore = score; // Example: Store score on game object
+            const initials = $('#initials-input').val().toUpperCase(); // Ensure uppercase
+            if (initials && initials.trim().length > 0 && initials.trim().length <= 3) {
+                // Retrieve the score that triggered the high score check
+                const currentScore = window.currentGame.score; 
 
                 let highScores = Asteroids.Util.loadHighScores();
-                highScores = Asteroids.Util.addHighScore(initials, window.currentGame.lastScore, highScores);
+                highScores = Asteroids.Util.addHighScore(initials.trim(), currentScore, highScores);
                 
-                // Hide initials modal
+                // Hide the initials modal.
                 $('#initials-input-modal').addClass('hide');
                 
-                // Show Game Over screen now, and update its high score list
-                Asteroids.Util.displayHighScores('high-scores-gameover');
-                $('#game-over').removeClass('hide');
+                // Now, trigger the new game sequence to return to the start screen/attract mode.
+                window.currentGame.newGame();
 
-                // Optional: Explode ship after submitting initials
-                // window.currentGame.ship_explosion.explode(null, window.currentGame.ship.pos); 
             } else {
-                // Handle empty input if necessary, though maxlength helps
-                alert("Please enter your initials.");
+                alert("Please enter 1 to 3 initials.");
             }
         });
 
