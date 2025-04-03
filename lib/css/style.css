@@ -126,6 +126,24 @@ h5.fire {
     -1px 1px 0 black;
 }
 
+#level {
+  font-size: 20px;
+  color: orange;
+  text-align: center;
+  margin: auto;
+  letter-spacing: 5px;
+  font-family: sans-serif;
+  text-shadow:
+    1px 0 0 black,
+    -1px 0 0 black,
+    0 1px 0 black,
+    0 -1px 0 black,
+    1px 1px black,
+    -1px -1px 0 black,
+    1px -1px 0 black,
+    -1px 1px 0 black;
+}
+
 #lives {
   font-weight: 700;
   font-size: 20px;
