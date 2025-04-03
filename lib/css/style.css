@@ -74,7 +74,7 @@ body {
 
 #sidebar h4 {
   font-weight: normal;
-  font-size: 10px;
+  font-size: 12px;
   color: #FFFF00;
   text-align: center;
   letter-spacing: 1px;
@@ -85,11 +85,11 @@ body {
 
 #sidebar h5 {
   font-weight: normal;
-  font-size: 14px;
+  font-size: 12px;
   color: #FFFFFF;
   text-align: center;
   letter-spacing: 1px;
-  margin-top: 2px;
+  margin-top: 10px;
   margin-bottom: 15px;
   text-shadow: 0 0 3px #FFFFFF;
 }
@@ -235,8 +235,8 @@ body {
   width: 80%;
   max-width: 600px;
   padding: 30px;
-  border: 3px solid #00FFFF;
-  box-shadow: 0 0 15px #00FFFF, inset 0 0 15px #00FFFF;
+  border: 3px solid #FF00FF;
+  box-shadow: 0 0 15px #FF00FF, inset 0 0 15px #FF00FF;
   background: #000010;
 }
 
@@ -283,7 +283,7 @@ body {
 .high-scores-list {
   margin: 20px auto;
   max-width: 500px;
-  padding: 20px;
+  padding: 40px;
   background: rgba(0, 0, 0, 0.5);
   border: 2px solid #00FF00;
   box-shadow: 0 0 10px #00FF00, inset 0 0 10px #00FF00;
@@ -291,10 +291,10 @@ body {
   text-shadow: 0 0 3px #00FF00, 0 0 6px #00FF00;
 }
 
-.high-scores-list h3 {
+#sidebar .high-scores-list h3 {
   color: #00FFFF;
   font-size: 20px;
-  margin-bottom: 15px;
+  margin-bottom: 25px;
   text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF;
   letter-spacing: 3px;
 }
@@ -308,7 +308,7 @@ body {
 
 .high-scores-list li {
   font-size: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   letter-spacing: 1px;
   white-space: pre;
   line-height: 1.4;
@@ -412,6 +412,7 @@ body {
 .score-columns {
   display: flex;
   justify-content: space-between;
+  column-gap: 3rem;
 }
 
 .score-column {
