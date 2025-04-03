@@ -46,8 +46,17 @@ body {
 }
 
 #sidebar header {
-  padding: 25px 0 0 0;
-  margin-bottom: 20px;
+  padding: 10px;
+  padding-top: 25px;
+  text-align: center;
+}
+
+#sidebar header h2 {
+  color: #00FFFF;
+  font-size: 18px;
+  text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 15px #FFFFFF;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
 }
 
 #sidebar header img {
