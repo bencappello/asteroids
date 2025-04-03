@@ -265,7 +265,7 @@ h5.fire {
 
 #menu-container {
   margin-top: 90px;
-  margin-bottom: 90px;
+  margin-bottom: 40px;
 }
 
 #menu h2 {
@@ -273,4 +273,37 @@ h5.fire {
   color: black;
   text-align: center;
   margin-bottom: 40px;
+}
+
+.centered-text {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  -webkit-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.centered-text h2 {
+  display: block;
+  color: orange;
+  font-size: 60px;
+  text-align: center;
+  text-shadow:
+    1px 0 0 black,
+    -1px 0 0 black,
+    0 1px 0 black,
+    0 -1px 0 black,
+    1px 1px black,
+    -1px -1px 0 black,
+    1px -1px 0 black,
+    -1px 1px 0 black;
+}
+
+/* Initially hide these elements */
+#level-display,
+#countdown-display {
+  /* Uses .hide class from existing CSS */
 }
