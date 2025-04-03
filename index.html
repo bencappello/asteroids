@@ -100,6 +100,17 @@
         <h5 class='turn'>→</h5>
       </section>
     </section>
+
+    <!-- Initials Input Modal (Initially Hidden) -->
+    <div id="initials-input-modal" class="modal-overlay hide">
+        <div class="modal-content">
+            <h3>High Score!</h3>
+            <p>Enter your initials (3 characters max):</p>
+            <input type="text" id="initials-input" maxlength="3" autocomplete="off" spellcheck="false">
+            <button id="submit-initials-btn" class="btn">Submit</button>
+        </div>
+    </div>
+
     <script>
       // Define Frame_Rate globally BEFORE other scripts load
       window.Frame_Rate = 2; 
@@ -131,6 +142,32 @@
             gameView.stopLoop(); // Stop the attract mode loop
             currentGame.startGameHandler(); // Setup game state and start countdown
             gameView.start(); // NOW start the main rendering/game loop
+        });
+
+        // Add listener for the initials submit button
+        $('#submit-initials-btn').on('click', function() {
+            const initials = $('#initials-input').val();
+            if (initials && initials.trim().length > 0) {
+                // Assume 'score' is globally accessible here, or pass it somehow
+                // A safer approach might be to store the score temporarily when the modal is shown
+                window.currentGame.lastScore = score; // Example: Store score on game object
+
+                let highScores = Asteroids.Util.loadHighScores();
+                highScores = Asteroids.Util.addHighScore(initials, window.currentGame.lastScore, highScores);
+                
+                // Hide initials modal
+                $('#initials-input-modal').addClass('hide');
+                
+                // Show Game Over screen now, and update its high score list
+                Asteroids.Util.displayHighScores('high-scores-gameover');
+                $('#game-over').removeClass('hide');
+
+                // Optional: Explode ship after submitting initials
+                // window.currentGame.ship_explosion.explode(null, window.currentGame.ship.pos); 
+            } else {
+                // Handle empty input if necessary, though maxlength helps
+                alert("Please enter your initials.");
+            }
         });
 
       };
