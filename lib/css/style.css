@@ -277,24 +277,24 @@ h5.fire {
   -moz-transform: translate(-50%, -50%);
   -ms-transform: translate(-50%, -50%);
   width: 500px;
-  height: 200px;
+  height: auto;
+  min-height: 200px;
   background-color: rgba(255, 255, 255, 0.5);
   z-index: 4;
 }
 
 #menu-container {
   text-align: center;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 20px;
 }
 
 #menu-container .btn {
-  display: inline-block;
+  display: block;
+  margin: 0 auto;
   width: auto;
   padding-left: 30px;
   padding-right: 30px;
+  border-radius: 5px;
 }
 
 #menu h2 {
@@ -452,4 +452,45 @@ h5.fire {
 /* Ensure hide class works */
 .modal-overlay.hide {
     display: none;
+}
+
+/* Adjustments for high scores list specifically within the start menu */
+#menu .high-scores-list {
+    margin-top: 0;
+    margin-bottom: 20px;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    color: #222;
+    background-color: transparent;
+    border-radius: 0;
+    max-height: none; /* Remove max-height as columns handle length */
+    overflow-y: visible; /* Remove scrollbar */
+}
+
+#menu .high-scores-list h3 {
+    color: #1A2366;
+    text-shadow: none;
+}
+
+#menu .high-scores-list ol,
+#menu .high-scores-list p {
+    /* Ensure readability */
+}
+
+/* Container for score columns */
+.score-columns {
+    display: flex;
+    justify-content: space-around; /* Space out columns */
+    align-items: flex-start; /* Align columns at the top */
+}
+
+/* Style for individual score column */
+.score-column {
+    flex: 1; /* Allow columns to share space */
+    /* Optional: Add some padding or max-width if needed */
+    padding: 0 10px; /* Add horizontal padding between columns */
+    list-style: none; /* Ensure list style is none */
+    padding-left: 0;  /* Ensure no default padding */
+    margin: 0;       /* Ensure no default margin */
 }
