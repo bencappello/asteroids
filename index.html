@@ -154,11 +154,21 @@
         $('#submit-initials-btn').on('click', function() {
             const initials = $('#initials-input').val().toUpperCase(); // Ensure uppercase
             if (initials && initials.trim().length > 0 && initials.trim().length <= 3) {
-                // Retrieve the score that triggered the high score check
-                const scoreToSave = window.currentGame.finalScore; 
+                // Retrieve the score from the modal's data attribute
+                const scoreToSave = $('#initials-input-modal').data('score-to-save'); 
+                console.log(`Attempting to save score: ${scoreToSave} with initials: ${initials.trim()}`);
+
+                if (typeof scoreToSave !== 'number') {
+                    console.error("Could not retrieve score to save from modal data!");
+                    alert("Error saving score. Score not found.");
+                    // Optionally call newGame anyway to reset
+                    window.currentGame.newGame(); 
+                    return; // Stop processing
+                }
 
                 let highScores = Asteroids.Util.loadHighScores();
                 highScores = Asteroids.Util.addHighScore(initials.trim(), scoreToSave, highScores);
+                console.log("High scores array AFTER addHighScore:", JSON.stringify(highScores)); // Log the updated list
                 
                 // Hide the initials modal.
                 $('#initials-input-modal').addClass('hide');
