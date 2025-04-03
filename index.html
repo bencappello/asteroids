@@ -47,11 +47,7 @@
           <div id="modal-screen" class='show'>
             <div id="menu">
               <div id="menu-container">
-                <h2>Difficulty</h2>
-                <button class="btn menu-btn" data-level='0'>Tourist</button>
-                <button class="btn menu-btn" data-level='1'>Deck Hand</button>
-                <button class="btn menu-btn" data-level='2'>Gunner</button>
-                <button class="btn menu-btn" data-level='3'>Commander</button>
+                <button id="start-game-btn" class="btn">Start Game</button>
               </div>
             </div>
           </div>
@@ -121,7 +117,16 @@
         // Initialize game AFTER all scripts are loaded
         window.currentGame = new Asteroids.Game(canvasEl.width, canvasEl.height);
         window.gameView = new Asteroids.GameView(context);
-        gameView.start();
+        // Start the attract mode loop immediately
+        gameView.startAttractModeLoop();
+
+        // Add listener for the new start game button
+        $('#start-game-btn').on('mouseup', function() {
+            gameView.stopLoop(); // Stop the attract mode loop
+            currentGame.startGameHandler(); // Setup game state and start countdown
+            gameView.start(); // NOW start the main rendering/game loop
+        });
+
       };
     </script>
     <script charset="utf-8"></script>
