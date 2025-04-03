@@ -155,10 +155,10 @@
             const initials = $('#initials-input').val().toUpperCase(); // Ensure uppercase
             if (initials && initials.trim().length > 0 && initials.trim().length <= 3) {
                 // Retrieve the score that triggered the high score check
-                const currentScore = window.currentGame.score; 
+                const scoreToSave = window.currentGame.finalScore; 
 
                 let highScores = Asteroids.Util.loadHighScores();
-                highScores = Asteroids.Util.addHighScore(initials.trim(), currentScore, highScores);
+                highScores = Asteroids.Util.addHighScore(initials.trim(), scoreToSave, highScores);
                 
                 // Hide the initials modal.
                 $('#initials-input-modal').addClass('hide');
