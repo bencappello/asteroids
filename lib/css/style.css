@@ -196,13 +196,14 @@ h5.fire {
   margin-bottom: 20px;
 }
 
-.menu-btn {
+/* Removed .menu-btn specific styles as we now have a single centered button */
+/* .menu-btn {
   margin-left: auto;
   margin-right: auto;
   width: 165px;
   text-align: center;
   margin-bottom: 10px;
-}
+} */
 
 
 
@@ -276,14 +277,24 @@ h5.fire {
   -moz-transform: translate(-50%, -50%);
   -ms-transform: translate(-50%, -50%);
   width: 500px;
-  height: 500px;
+  height: 200px;
   background-color: rgba(255, 255, 255, 0.5);
   z-index: 4;
 }
 
 #menu-container {
-  margin-top: 90px;
-  margin-bottom: 40px;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#menu-container .btn {
+  display: inline-block;
+  width: auto;
+  padding-left: 30px;
+  padding-right: 30px;
 }
 
 #menu h2 {
