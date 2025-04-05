@@ -1,0 +1,19 @@
+{
+  "name": "asteroids",
+  "version": "1.0.0",
+  "description": "### Description A browser-based version of the classic arcade game Asteroids.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}
