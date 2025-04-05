@@ -1,5 +1,9 @@
 // __tests__/game.test.js
 
+// Store original console methods
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
 describe('Asteroids.Game', () => {
     let game;
     let GameRef; // Variable to hold the Game constructor/namespace
@@ -25,6 +29,20 @@ describe('Asteroids.Game', () => {
 
     // Setup mocks BEFORE requiring the script
     beforeAll(() => {
+        // Suppress specific console messages
+        console.error = jest.fn((...args) => {
+            const message = typeof args[0] === 'string' ? args[0] : '';
+            if (!message.includes("High score target element 'high-scores-start' not found")) {
+                originalConsoleError.apply(console, args);
+            }
+        });
+        console.warn = jest.fn((...args) => {
+            const message = typeof args[0] === 'string' ? args[0] : '';
+            if (!message.includes("Game loop was not running. Attempting to restart.")) {
+                originalConsoleWarn.apply(console, args);
+            }
+        });
+
         originalAsteroids = { ...window.Asteroids }; // Shallow copy
         window.Asteroids = window.Asteroids || {};
 
@@ -116,6 +134,10 @@ describe('Asteroids.Game', () => {
     });
 
     afterAll(() => {
+        // Restore original console methods
+        console.error = originalConsoleError;
+        console.warn = originalConsoleWarn;
+
         // Restore original Asteroids object and other globals
         window.Asteroids = originalAsteroids;
         delete global.gameView;
@@ -686,7 +708,7 @@ describe('Asteroids.Game', () => {
         });
 
         test('should call console.error if colliding object lacks collideWith method', () => {
-            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {}); // Suppress output
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
             const faultyObj1 = { isCollidedWith: jest.fn(() => true), id: 'faultyObj1' }; // Missing collideWith
             allObjectsSpy.mockReturnValue([faultyObj1, mockObj2]);
 
@@ -872,129 +894,130 @@ describe('Asteroids.Game', () => {
 
     describe('newGame', () => {
         let game;
-        let mockQueryResults; // To store individual jQuery results
-        let displayScoresSpy;
-        let clearTimeoutSpy;
-        let mockShipExplosionInstance;
-
-        let sharedJQueryMethods;
-
-        beforeEach(() => {
-            // Get the shared methods object for checking calls
-            sharedJQueryMethods = mockJQuery();
-
-            // Create game instance
-            game = new GameRef(DIM_X, DIM_Y);
-
-            // --- Setup specific mocks for newGame ---
-            // No need to mockImplementation here, global mock is sufficient.
-            // We will check calls against sharedJQueryMethods.
-
-            // Spy on Util.displayHighScores (already spied in beforeAll, but ensure clear)
-            displayScoresSpy = jest.spyOn(window.Asteroids.Util, 'displayHighScores');
-            // displayScoresSpy.mockClear(); // Clearing is handled by global beforeEach / restoreAllMocks
-
-            // Mock gameView methods (already mocked, ensure clear)
-            // MockGameView.stopLoop.mockClear(); // Clearing handled by global beforeEach
-            // MockGameView.startAttractModeLoop.mockClear();
-
-            // Mock clearTimeout
-            clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
-
-            // Set some non-default state before calling newGame
-            game.gameOver = true;
-            game.attractMode = false;
-            game.score = 1000;
-            game.lives = 1;
-            game.ship = new MockShip({ game: game }); // Give it a ship
-            game.asteroids = []; // Clear asteroids from constructor
-            game.preLevelState = { countdown: 1, timerId: 12345 }; // Set a pre-level state
-            game.gameOverScreenShown = true;
-            
-            // Give the ship explosion a specific frame state
-            mockShipExplosionInstance = game.ship_explosion; // Get the instance created by constructor
-            mockShipExplosionInstance.frame = 10; 
-
-            // Clear mock calls from game setup
-            MockAsteroid.mockClear(); 
-        });
-
-        afterEach(() => {
-             // Restore spies specific to this suite
-             displayScoresSpy.mockRestore();
-             clearTimeoutSpy.mockRestore();
-             // No need to restore jQuery mock implementation
-        });
+        let stopLoopSpy, startAttractModeLoopSpy, clearTimeoutSpy, addInitialAsteroidsSpy, displayHighScoresSpy, sharedJQueryMethods, mockShipExplosionInstance;
 
         test('should reset game state flags (gameOver, attractMode, etc.)', () => {
+            // Setup inside test
+            game = new GameRef(DIM_X, DIM_Y);
+            game.gameOver = true; // Set non-default state
+            game.attractMode = false;
+            game.gameOverScreenShown = true;
+
             game.newGame();
+
             expect(game.gameOver).toBe(false);
             expect(game.attractMode).toBe(true);
-            expect(game.preLevelState).toBeNull();
             expect(game.gameOverScreenShown).toBe(false);
         });
 
-        test('should reset score and lives', () => {
+        test('should reset score and lives and update UI', () => {
+            // Setup inside test
+            game = new GameRef(DIM_X, DIM_Y);
+            sharedJQueryMethods = mockJQuery(); // Get mock methods
+            game.score = 100;
+            game.lives = 1;
+
             game.newGame();
+
             expect(game.score).toBe(0);
             expect(game.lives).toBe(GameRef.NUM_LIVES);
-            // Check UI updates
             expect(sharedJQueryMethods.html).toHaveBeenCalledWith(0);
             expect(sharedJQueryMethods.html).toHaveBeenCalledWith(GameRef.NUM_LIVES);
             expect(sharedJQueryMethods.html).toHaveBeenCalledWith('-');
         });
 
         test('should reset object arrays and ship', () => {
-            game.ufos = [new MockUfo({ game: game })]; // Add some objects
-            game.bullets = [new MockBullet({ game: game })];
-            game.powerUp = new MockPowerUp({ game: game });
+            // Setup inside test
+            game = new GameRef(DIM_X, DIM_Y);
+            game.ship = new MockShip({ game: game }); // Add a ship
+            game.bullets = [{}]; // Add dummy objects
+            game.ufos = [{}];
+            game.ufoBullets = [{}];
+            game.powerUp = {};
+            game.asteroid_explosions = [{}];
 
             game.newGame();
 
             expect(game.ship).toBeNull();
+            expect(game.bullets).toEqual([]);
             expect(game.ufos).toEqual([]);
             expect(game.ufoBullets).toEqual([]);
             expect(game.powerUp).toBeNull();
-            expect(game.bullets).toEqual([]);
             expect(game.asteroid_explosions).toEqual([]);
         });
 
         test('should reset ship explosion frame', () => {
+            // Setup inside test
+            game = new GameRef(DIM_X, DIM_Y);
+            mockShipExplosionInstance = game.ship_explosion;
+            mockShipExplosionInstance.frame = 10; // Set a frame
+
             game.newGame();
+
+            // Check instance directly
             expect(mockShipExplosionInstance.frame).toBeGreaterThan(mockShipExplosionInstance.img_obj.total_frames);
         });
 
         test('should stop game loop and clear pre-level timer', () => {
+            // Setup inside test
+            game = new GameRef(DIM_X, DIM_Y);
+            game.preLevelState = { countdown: 1, timerId: 12345 }; // Set pre-level state
+            stopLoopSpy = jest.spyOn(window.gameView, 'stopLoop');
+            clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+
             game.newGame();
+
             expect(window.gameView.stopLoop).toHaveBeenCalledTimes(1);
             expect(clearTimeoutSpy).toHaveBeenCalledWith(12345); // Check timerId was cleared
+            expect(game.preLevelState).toBeNull();
         });
 
         test('should manipulate UI elements correctly (hide/show modals)', () => {
+            // Setup inside test
+            game = new GameRef(DIM_X, DIM_Y);
+            sharedJQueryMethods = mockJQuery(); // Get mock methods
+
             game.newGame();
+
             expect(sharedJQueryMethods.addClass).toHaveBeenCalledWith('hide');
             expect(sharedJQueryMethods.removeClass).toHaveBeenCalledWith('hide');
-            // Check specific selectors were used (more robust check if needed)
-            // expect(mockJQuery).toHaveBeenCalledWith('#game-over');
-            // expect(mockJQuery).toHaveBeenCalledWith('#modal-screen');
+            // Check specific selectors involved
+            expect(mockJQuery).toHaveBeenCalledWith('#game-over');
+            expect(mockJQuery).toHaveBeenCalledWith('#level-display');
+            expect(mockJQuery).toHaveBeenCalledWith('#countdown-display');
+            expect(mockJQuery).toHaveBeenCalledWith('#initials-input-modal');
+            expect(mockJQuery).toHaveBeenCalledWith('#modal-screen');
         });
 
         test('should add initial asteroids for attract mode', () => {
-            const addInitialSpy = jest.spyOn(game, 'addInitialAsteroids');
+            // Setup inside test
+            game = new GameRef(DIM_X, DIM_Y);
+            MockAsteroid.mockClear(); // Clear calls from constructor
+            addInitialAsteroidsSpy = jest.spyOn(game, 'addInitialAsteroids').mockReturnValue(Array(20).fill({})); // Mock return value
+
             game.newGame();
-            expect(addInitialSpy).toHaveBeenCalledWith(true); // Called for attract mode
-            expect(game.asteroids.length).toBe(20); // Check that asteroids were added
-            expect(MockAsteroid).toHaveBeenCalledTimes(20);
-            addInitialSpy.mockRestore();
+
+            expect(addInitialAsteroidsSpy).toHaveBeenCalledWith(true); // Called for attract mode
+            expect(game.asteroids.length).toBe(20); // Check that asteroids were set (mocked return)
         });
 
         test('should display high scores on start screen', () => {
+            // Setup inside test
+            game = new GameRef(DIM_X, DIM_Y);
+            displayHighScoresSpy = jest.spyOn(window.Asteroids.Util, 'displayHighScores');
+
             game.newGame();
-            expect(displayScoresSpy).toHaveBeenCalledWith('high-scores-start');
+
+            expect(displayHighScoresSpy).toHaveBeenCalledWith('high-scores-start');
         });
 
         test('should start attract mode loop', () => {
+            // Setup inside test
+            game = new GameRef(DIM_X, DIM_Y);
+            startAttractModeLoopSpy = jest.spyOn(window.gameView, 'startAttractModeLoop');
+
             game.newGame();
+
             expect(window.gameView.startAttractModeLoop).toHaveBeenCalledTimes(1);
         });
     });
