@@ -97,48 +97,58 @@ This plan outlines the steps to create a comprehensive test suite for the Astero
     -   [X] Create `__tests__/game.test.js`.
     -   [X] Mock `Asteroid`, `Ship`, `Bullet`, `Ufo`, `Explosion`, `Powerup` constructors/classes as needed.
     -   [X] Test `Game` constructor: Verify initial state (score=0, lives=default, level=1, empty object arrays: `asteroids`, `bullets`, `ship`, `ufos`, etc.). Verify dimensions (`DIM_X`, `DIM_Y`).
-    -   [X] Test `addAsteroids`: Verify `NUM_ASTEROIDS` are added to the `asteroids` array. Check properties of added asteroids if possible.
-    -   [X] Test `addShip`: Verify the `ship` array contains one ship, correctly positioned. (Note: Ship added later in flow)
+    -   [X] Test `addInitialAsteroids`: Verify asteroids are added. Check properties of added asteroids if possible.
+    -   [ ] Test `addShip`: Verify the `ship` array contains one ship, correctly positioned. (Note: Ship added via `startGameHandler`)
     -   [X] Test `addUfo`: Verify a UFO is added. (Tested via `maybeAddUfo`)
-    -   [X] Test dynamic object addition (`add` method): Add different object types and verify they land in the correct arrays (`asteroids`, `bullets`, `ufos`, `explosions`).
-    -   [X] Test object removal (`remove` method): Add an object, then remove it, verifying it's gone from the corresponding array.
+    -   [X] Test dynamic object addition (`add` method): Add different object types and verify they land in the correct arrays (`asteroids`, `bullets`, `ufos`, `explosions`, `powerUp`).
+    -   [X] Test object removal (`remove` method): Add an object, then remove it, verifying it's gone from the corresponding array. Test removing `powerUp`.
 
 -   [X] **Integration Tests: `lib/javascripts/game.js` - Game Loop (`step`)**
     -   [X] Test `step` method:
-        -   [X] Mock `moveObjects`, `checkCollisions`, `checkLevelEnd`, `draw`.
-        -   [X] Call `step()`.
-        -   [X] Verify that `moveObjects`, `checkCollisions`, `checkLevelEnd` were called.
+        -   [X] Mock `moveObjects`, `checkCollisions`, `advanceLevel`, spawning methods.
+        -   [X] Verify `moveObjects`, `checkCollisions` are called in normal state.
+        -   [X] Verify `advanceLevel` is called when level clear & spawning disallowed.
+        -   [X] Verify spawning methods are called when level not clear & spawning allowed.
+        -   [X] Verify logic for attract mode.
+        -   [X] Verify logic for game over state (waiting for explosion/delay).
+        -   [X] Verify logic for pre-level state.
     -   [X] Test `moveObjects`:
         -   [X] Add various objects (asteroids, ship, bullets).
         -   [X] Mock the `move` method on their prototypes.
-        -   [X] Call `game.moveObjects()`.
-        -   [X] Verify that the `move` method was called on each object.
+        -   [X] Call `game.moveObjects()`. Verify `move` called on correct objects based on `attractMode`.
+        -   [X] Test handling of objects without `move` method.
 
 -   [X] **Integration Tests: `lib/javascripts/game.js` - Collision Detection (`checkCollisions`)**
-    -   [X] Setup specific scenarios in the `game` object arrays:
-        -   [X] Ship colliding with Asteroid. (Tested via `allObjects` mock)
-        -   [X] Bullet colliding with Asteroid. (Tested via `allObjects` mock)
-        -   [X] Ship colliding with UFO. (Tested via `allObjects` mock)
-        -   [X] Player Bullet colliding with UFO. (Tested via `allObjects` mock)
-        -   [X] Ship colliding with UFO Bullet. (Tested via `allObjects` mock)
-        -   [X] Asteroid colliding with Asteroid (should not interact). (Tested via `allObjects` mock)
-        -   [X] Bullet colliding with Bullet (should not interact). (Tested via `allObjects` mock)
-    -   [X] Mock `ship.relocate()`, `remove()`, `Asteroid.prototype.split()` (if exists). (Tested via `allObjects` mock)
-    -   [X] Call `game.checkCollisions()`.
-    -   [X] Verify `remove` is called on the correct objects for each collision type. (Indirectly tested via `collideWith` calls)
-    -   [X] Verify `ship.relocate` is called and lives decrease on ship destruction. (Tested via `handleDeath` tests)
-    -   [X] Verify score increases correctly for bullet hits. (TODO: Needs specific collision tests beyond just calling `collideWith`)
-    -   [X] Verify asteroid splitting logic adds new, smaller asteroids and removes the original. (TODO: Needs specific collision tests)
-    -   [X] Verify explosion objects are added upon destruction events. (TODO: Needs specific collision tests)
+    -   [X] Mock `allObjects` to return specific pairs for collision checks.
+    -   [X] Mock `isCollidedWith` and `collideWith` on test objects.
+    -   [X] Verify `collideWith` is called when `isCollidedWith` returns true.
+    -   [X] Verify `collideWith` is NOT called when `isCollidedWith` returns false.
+    -   [X] Test handling multiple objects and collisions.
+    -   [X] Test handling of objects missing `collideWith` or `isCollidedWith`.
+    -   [ ] Verify score increases correctly for bullet hits. (TODO: Needs specific collision outcome tests)
+    -   [ ] Verify asteroid splitting logic adds new, smaller asteroids and removes the original. (TODO: Needs specific collision outcome tests)
+    -   [ ] Verify explosion objects are added upon destruction events. (TODO: Needs specific collision outcome tests)
 
 -   [X] **Integration Tests: `lib/javascripts/game.js` - Game State & Levels**
-    -   [X] Test game over condition: Set `lives` to 1, simulate ship destruction, verify game over state is triggered (e.g., a `gameOver` flag is set, specific message logged, or relevant method called). (Tested via `handleDeath`)
-    -   [X] Test level progression (`checkLevelEnd`, `nextLevel`):
-        -   [X] Start a game instance. Remove all asteroids from the `asteroids` array.
-        -   [X] Call `checkLevelEnd()`. Verify it returns `true`. (Tested via `step` indirectly)
-        -   [X] Call `nextLevel()`. Verify `level` increments, score might get bonus points, ship is relocated, and new asteroids are added (potentially more or faster based on the new level). (Tested `advanceLevel`, which calls `startPreLevelSequence`)
+    -   [X] Test `startGameHandler`: Verify state transition from attract, ship creation, DOM updates, sequence start.
+    -   [X] Test `newGame`: Verify state reset to attract, object clearing, DOM updates, loop start.
+    -   [X] Test `reset`: Verify ship repositioning, state reset (vel, angle, collision, powerup), invincibility setup.
+    -   [X] Test `handleDeath`: 
+        -   [X] Verify `decrementLives` is called.
+        -   [X] Verify ship suspension, explosion start with `reset` callback (when lives > 0).
+        -   [X] Verify `gameOver` set, score stored, explosion start with null callback (when lives <= 0).
+        -   [X] Verify idempotency when already game over.
+    -   [X] Test `decrementLives`: Verify lives count, UI update, doesn't go below 0.
+    -   [X] Test level progression (`advanceLevel`):
+        -   [X] Verify level increment and UI update.
+        -   [X] Verify `num_asteroids` and `min_asteroid_speed` calculations.
+        -   [X] Verify `startPreLevelSequence` is called.
+    -   [X] Test Pre-Level Sequence (`startPreLevelSequence`, `handleCountdownTick`, `startLevelGameplay`):
+        -   [X] Verify state init, object clearing, ship reset, level display.
+        -   [X] Verify timeout chain for countdown display (3-2-1-Go!-Hide).
+        -   [X] Verify `levelStartTime` set and ship reanimated after countdown.
+        -   [X] Verify asteroid addition for the new level.
     -   [ ] Test score tracking consistency across various actions (destroying asteroids, UFOs, level completion). (TODO: Needs specific collision/gameplay tests)
-    -   [X] Test asteroid regeneration logic if applicable (e.g., ensure `addInitialAsteroids` refills correctly). (Tested via `advanceLevel` -> `startPreLevelSequence` -> `startLevelGameplay` -> `addInitialAsteroids`)
 
 -   [X] **Integration Tests: `lib/javascripts/game.js` - Spawning**
     -   [X] Test `getMaxUfosForLevel`.
@@ -155,20 +165,32 @@ This plan outlines the steps to create a comprehensive test suite for the Astero
 
 ## Phase 4: View and Input Handling (Bridging to E2E)
 
--   [ ] **Integration Tests: `lib/javascripts/gameView.js` (Limited Scope)**
-    -   [ ] Create `__tests__/gameView.test.js`.
-    -   [ ] Mock `Game`, `CanvasRenderingContext2D`, `keymaster`.
-    -   [ ] Test `GameView` constructor: Verify `game` and `ctx` are stored.
-    -   [ ] Test `start` method:
-        -   [ ] Mock `setInterval` or `requestAnimationFrame`.
-        -   [ ] Mock `game.step` and `game.draw`.
-        -   [ ] Call `gameView.start()`.
-        -   [ ] Verify the timer function is set up correctly.
-        -   [ ] Simulate timer ticks and verify `game.step` and `game.draw` are called.
-    -   [ ] Test `bindKeyHandlers`:
-        -   [ ] Mock `keymaster`. Mock `ship.power`, `ship.rotate`, `ship.fireBullet`.
-        -   [ ] Call `gameView.bindKeyHandlers()`.
-        -   [ ] Verify `keymaster` was called with the correct keys and corresponding ship methods.
+-   [X] **Integration Tests: `lib/javascripts/gameView.js` (Limited Scope)**
+    -   [X] Create `__tests__/gameView.test.js`.
+    -   [X] Mock `Game` (via global `currentGame`), `CanvasRenderingContext2D`, `keymaster` (implicitly tested via `assessKeys`), `_` (lodash/underscore throttle).
+    -   [X] Test `GameView` constructor: Verify `ctx` is stored.
+    -   [X] Test `start` method:
+        -   [X] Mock `setInterval`.
+        -   [X] Mock `currentGame.step` and `currentGame.draw`.
+        -   [X] Verify `bindKeyHandlers` is called.
+        -   [X] Simulate timer ticks and verify `assessKeys`, `currentGame.step`, and `currentGame.draw` are called.
+        -   [X] Verify `clearInterval` is called if loop already running.
+    -   [X] Test `startAttractModeLoop` method:
+        -   [X] Mock `setInterval`.
+        -   [X] Mock `currentGame.step` and `currentGame.draw`.
+        -   [X] Simulate timer ticks and verify `currentGame.step` and `currentGame.draw` are called (but not `assessKeys`).
+        -   [X] Verify `clearInterval` is called if loop already running.
+    -   [X] Test `stopLoop` method:
+        -   [X] Verify `clearInterval` is called with the correct ID.
+        -   [X] Verify it handles `intervalID` being null.
+    -   [X] Test `bindKeyHandlers`:
+        -   [X] Verify `keyState` is initialized.
+        -   [X] Verify `shipFire` is created using `_.throttle` and `currentGame.ship.fireBullet`.
+    -   [X] Test `assessKeys`:
+        -   [X] Verify correct ship methods (`power`, `rotate`) are called for arrow key codes (37-40).
+        -   [X] Verify `shipFire` is called for space bar (32).
+        -   [X] Verify it handles multiple keys.
+        -   [X] Verify it does nothing if `currentGame.preLevelState` is set.
 
 ## Phase 5: End-to-End Tests (Optional, Recommended for UI/Interaction)**
 
