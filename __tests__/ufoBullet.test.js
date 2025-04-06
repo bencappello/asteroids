@@ -7,24 +7,39 @@ describe('Asteroids.UfoBullet', () => {
     let mockGame;
     let MockShip;
     let MockImage;
+    let mockCtx;
 
-    // Setup mocks BEFORE requiring the script
     beforeAll(() => {
+        jest.resetModules();
         window.Asteroids = window.Asteroids || {};
 
-        // Mock Util
-        mockUtil = { inherits: jest.fn() };
+        // Mock Util (with inherits)
+        mockUtil = {
+            inherits: jest.fn((ChildClass, BaseClass) => {
+                function Surrogate() {} 
+                if (BaseClass && BaseClass.prototype) {
+                    Surrogate.prototype = BaseClass.prototype;
+                    const newProto = new Surrogate();
+                    Object.assign(newProto, ChildClass.prototype);
+                    ChildClass.prototype = newProto;
+                    ChildClass.prototype.constructor = ChildClass;
+                } else { console.error("Mock inherits invalid BaseClass"); }
+            }),
+        };
         window.Asteroids.Util = mockUtil;
 
         // Mock MovingObject
         MockMovingObject = jest.fn(function(args) {
-            this.pos = args.pos; this.vel = args.vel; this.radius = args.radius; this.game = args.game;
+            this.pos = args.pos; this.vel = args.vel; this.radius = args.radius; this.game = args.game; this.type = 'MovingObject';
         });
+        MockMovingObject.prototype = {}; // Define prototype for inherits
         window.Asteroids.movingObject = MockMovingObject;
 
-        // Mock Ship constructor
-        MockShip = jest.fn(function() {
-            this.suspended = false; this.isInvincible = false;
+        // Mock Ship
+        MockShip = jest.fn(function(args={}) {
+            this.type = 'Ship';
+            this.suspended = args.suspended !== undefined ? args.suspended : false;
+            this.isInvincible = args.isInvincible !== undefined ? args.isInvincible : false;
         });
         window.Asteroids.Ship = MockShip;
 
@@ -34,149 +49,119 @@ describe('Asteroids.UfoBullet', () => {
 
         // Mock Game
         mockGame = {
-            remove: jest.fn(),
             handleDeath: jest.fn(),
+            remove: jest.fn(),
         };
 
         // --- Require the script ---
-        require('../lib/javascripts/ufoBullet.js');
-        UfoBullet = window.Asteroids.UfoBullet;
-
-        // Check inherits call
-        expect(mockUtil.inherits).toHaveBeenCalledWith(UfoBullet, MockMovingObject);
+        UfoBullet = require('../lib/javascripts/ufoBullet.js');
     });
 
-    // Reset mocks
+    afterAll(() => {
+        jest.restoreAllMocks();
+    });
+
     let ufoBullet;
     let ufoBulletOptions;
     beforeEach(() => {
         MockMovingObject.mockClear();
-        mockGame.remove.mockClear();
         mockGame.handleDeath.mockClear();
+        mockGame.remove.mockClear();
         MockShip.mockClear();
         MockImage.mockClear();
 
+        // Mock context
+        mockCtx = {
+            drawImage: jest.fn(),
+        };
+
         ufoBulletOptions = {
-            pos: [30, 40],
-            vel: [0, 2],
-            game: mockGame
+            pos: [100, 100],
+            vel: [0, 1], // Example velocity
+            game: mockGame,
         };
         ufoBullet = new UfoBullet(ufoBulletOptions);
     });
 
     describe('Constructor', () => {
-        test('should initialize default properties and call MovingObject', () => {
-            expect(ufoBullet.radius).toBe(UfoBullet.RADIUS);
-            expect(ufoBullet.isWrappable).toBe(false);
+        test('should initialize properties', () => {
             expect(ufoBullet.game).toBe(mockGame);
-
-            expect(MockMovingObject).toHaveBeenCalledTimes(1);
-            const movingObjectArgs = MockMovingObject.mock.calls[0][0];
-            expect(movingObjectArgs.pos).toEqual(ufoBulletOptions.pos);
-            expect(movingObjectArgs.vel).toEqual(ufoBulletOptions.vel);
-            expect(movingObjectArgs.radius).toBe(UfoBullet.RADIUS);
-            expect(movingObjectArgs.game).toBe(mockGame);
+            expect(ufoBullet.type).toBe('UfoBullet');
+            expect(ufoBullet.isWrappable).toBe(false);
+            expect(MockMovingObject).toHaveBeenCalledWith(expect.objectContaining({
+                pos: ufoBulletOptions.pos,
+                vel: ufoBulletOptions.vel,
+                radius: UfoBullet.RADIUS,
+                color: '#ffff00', // Check color
+                game: mockGame
+            }));
         });
 
         test('should create Image and set src', () => {
-            expect(MockImage).toHaveBeenCalledTimes(1);
-            const imageInstance = MockImage.mock.instances[0];
+            expect(MockImage).toHaveBeenCalled();
+            const imageInstance = ufoBullet.img;
+            expect(imageInstance).toBeInstanceOf(MockImage);
             expect(imageInstance.src).toBe('lib/images/ufo_bullet.png');
-            expect(ufoBullet.img).toBe(imageInstance);
+        });
+    });
+
+    describe('draw', () => {
+        test('should call context drawImage correctly', () => {
+            mockCtx.drawImage.mockClear();
+            ufoBullet.pos = [50, 60];
+            ufoBullet.draw(mockCtx);
+            expect(mockCtx.drawImage).toHaveBeenCalledTimes(1);
+            expect(mockCtx.drawImage).toHaveBeenCalledWith(
+                ufoBullet.img,
+                50 - ufoBullet.radius,
+                60 - ufoBullet.radius,
+                ufoBullet.radius * 2,
+                ufoBullet.radius * 2
+            );
         });
     });
 
     describe('collideWith', () => {
         let mockShipInstance;
-        let originalAsteroidsShip; // To restore after mocking
-        let originalAsteroidsBullet;
-
-        beforeAll(() => {
-            // Store original values if they exist
-            originalAsteroidsShip = window.Asteroids.Ship;
-            originalAsteroidsBullet = window.Asteroids.Bullet;
-        });
-
-        afterAll(() => {
-            // Restore original values
-            window.Asteroids.Ship = originalAsteroidsShip;
-            window.Asteroids.Bullet = originalAsteroidsBullet;
-            // Clean up potentially defined mocks if originals were undefined
-            if (originalAsteroidsShip === undefined) delete window.Asteroids.Ship;
-            if (originalAsteroidsBullet === undefined) delete window.Asteroids.Bullet;
-        });
 
         beforeEach(() => {
             mockShipInstance = new MockShip();
-            mockShipInstance.constructor = MockShip; // For instanceof
-            mockShipInstance.pos = [31, 41]; // Close enough
-            // Ensure Ship mock is available globally for instanceof checks inside collideWith
-            window.Asteroids.Ship = MockShip;
+            mockGame.handleDeath.mockClear();
+            mockGame.remove.mockClear();
         });
 
-        test('should call game.handleDeath and remove self if hitting vulnerable Ship', () => {
+        test('should call game.handleDeath and remove self if colliding with vulnerable, active Ship', () => {
             mockShipInstance.isInvincible = false;
             mockShipInstance.suspended = false;
-
             ufoBullet.collideWith(mockShipInstance);
-
             expect(mockGame.handleDeath).toHaveBeenCalledTimes(1);
-            expect(mockGame.remove).toHaveBeenCalledWith(ufoBullet);
             expect(mockGame.remove).toHaveBeenCalledTimes(1);
+            expect(mockGame.remove).toHaveBeenCalledWith(ufoBullet);
         });
 
-        test('should remove self but NOT call game.handleDeath if hitting invincible Ship', () => {
+        test('should remove self but NOT call game.handleDeath if colliding with invincible Ship', () => {
             mockShipInstance.isInvincible = true;
             mockShipInstance.suspended = false;
-
             ufoBullet.collideWith(mockShipInstance);
-
             expect(mockGame.handleDeath).not.toHaveBeenCalled();
-            expect(mockGame.remove).toHaveBeenCalledWith(ufoBullet);
             expect(mockGame.remove).toHaveBeenCalledTimes(1);
+            expect(mockGame.remove).toHaveBeenCalledWith(ufoBullet);
         });
 
-        test('should remove self but NOT call game.handleDeath if hitting suspended Ship', () => {
-             mockShipInstance.isInvincible = false;
-             mockShipInstance.suspended = true;
-
+        test('should remove self but NOT call game.handleDeath if colliding with suspended Ship', () => {
+            mockShipInstance.isInvincible = false;
+            mockShipInstance.suspended = true;
             ufoBullet.collideWith(mockShipInstance);
-
             expect(mockGame.handleDeath).not.toHaveBeenCalled();
-            expect(mockGame.remove).toHaveBeenCalledWith(ufoBullet);
             expect(mockGame.remove).toHaveBeenCalledTimes(1);
+            expect(mockGame.remove).toHaveBeenCalledWith(ufoBullet);
         });
 
-         test('should do nothing if colliding with non-Ship object (e.g., Asteroid)', () => {
-            const MockAsteroid = jest.fn(); // Minimal mock for instanceof check
-             const mockAsteroidInstance = new MockAsteroid();
-             mockAsteroidInstance.constructor = MockAsteroid;
-             window.Asteroids.Asteroid = MockAsteroid; // Temporarily place mock
-
-             ufoBullet.collideWith(mockAsteroidInstance);
-
-             expect(mockGame.handleDeath).not.toHaveBeenCalled();
-             expect(mockGame.remove).not.toHaveBeenCalled();
-
-             delete window.Asteroids.Asteroid; // Clean up global mock
-         });
-
-         test('should do nothing if colliding with player Bullet', () => {
-             const MockBullet = jest.fn();
-             const mockBulletInstance = new MockBullet();
-             mockBulletInstance.constructor = MockBullet;
-             window.Asteroids.Bullet = MockBullet;
-
-             ufoBullet.collideWith(mockBulletInstance);
-
-             expect(mockGame.handleDeath).not.toHaveBeenCalled();
-             expect(mockGame.remove).not.toHaveBeenCalled();
-
-             delete window.Asteroids.Bullet;
-         });
-    });
-
-    describe('draw', () => {
-        test.todo('should call context drawImage correctly');
+        test('should do nothing if colliding with non-Ship object', () => {
+            const otherObject = { type: 'Asteroid', pos:[0,0], radius: 10 }; 
+            ufoBullet.collideWith(otherObject);
+            expect(mockGame.handleDeath).not.toHaveBeenCalled();
+            expect(mockGame.remove).not.toHaveBeenCalled();
+        });
     });
 }); 

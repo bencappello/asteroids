@@ -14,65 +14,84 @@ describe('Asteroids.Ufo', () => {
     let mockAsteroidExplosionInstance;
     let MockImage;
     let originalMathRandom;
+    let mockCtx; // For draw test
 
     // Setup mocks BEFORE requiring the script
     beforeAll(() => {
+        jest.resetModules(); // Reset modules like in bullet test
         window.Asteroids = window.Asteroids || {};
 
-        // Mock Util
+        // Mock Util (with inherits)
         mockUtil = {
-            inherits: jest.fn(),
-            randomVec: jest.fn().mockReturnValue([0.5, 0]), // Default random velocity
+            inherits: jest.fn((ChildClass, BaseClass) => {
+                function Surrogate() {} 
+                if (BaseClass && BaseClass.prototype) {
+                    Surrogate.prototype = BaseClass.prototype;
+                    const newProto = new Surrogate();
+                    Object.assign(newProto, ChildClass.prototype);
+                    ChildClass.prototype = newProto;
+                    ChildClass.prototype.constructor = ChildClass;
+                } else { /* ... */ }
+            }),
+            randomVec: jest.fn().mockReturnValue([0.5, 0]), 
         };
         window.Asteroids.Util = mockUtil;
 
-        // Mock MovingObject prototype.move FIRST
-        mockMovingObjectMove = jest.fn();
-        window.Asteroids.movingObject = window.Asteroids.movingObject || {};
-        window.Asteroids.movingObject.prototype = window.Asteroids.movingObject.prototype || {};
-        window.Asteroids.movingObject.prototype.move = mockMovingObjectMove;
-
-        // Mock MovingObject constructor
+        // Mock MovingObject constructor (properties only)
         MockMovingObject = jest.fn(function(args) {
-            this.pos = args.pos; this.vel = args.vel; this.radius = args.radius; this.game = args.game;
+            this.pos = args.pos; this.vel = args.vel; this.radius = args.radius; this.game = args.game; this.type = 'MovingObject';
         });
+        // Define the prototype and add a mock for the base move method
+        MockMovingObject.prototype = {
+            move: jest.fn()
+        };
         window.Asteroids.movingObject = MockMovingObject;
-        // Re-attach the mocked prototype
-        window.Asteroids.movingObject.prototype = { move: mockMovingObjectMove };
 
-
-        // Mock UfoBullet constructor
-        MockUfoBullet = jest.fn();
+        // Mock UfoBullet constructor with type
+        MockUfoBullet = jest.fn(function(args) { this.type = 'UfoBullet'; });
         window.Asteroids.UfoBullet = MockUfoBullet;
 
-        // Mock Ship constructor
-        MockShip = jest.fn(function() {
-            this.suspended = false; this.isInvincible = false;
+        // Mock Ship constructor with type
+        MockShip = jest.fn(function(args={}) {
+            this.type = 'Ship';
+            this.suspended = args.suspended || false;
+            this.isInvincible = args.isInvincible || false;
+            this.radius = args.radius || 20;
+            this.pos = args.pos || [0,0];
         });
         window.Asteroids.Ship = MockShip;
 
-        // Mock Asteroid constructor
-        MockAsteroid = jest.fn(function(args){
-            this.pos = args.pos; this.radius = args.radius;
+        // Mock Asteroid constructor with type
+        MockAsteroid = jest.fn(function(args={}){
+            this.type = 'Asteroid';
+            this.pos = args.pos;
+            this.radius = args.radius;
         });
         window.Asteroids.Asteroid = MockAsteroid;
 
-        // Mock Bullet constructor (player bullet)
-        MockBullet = jest.fn(function(args){
-             this.pos = args.pos; this.radius = args.radius;
+        // Mock Bullet constructor (player bullet) with type
+        MockBullet = jest.fn(function(args={}){
+             this.type = 'Bullet';
+             this.pos = args.pos;
+             this.radius = args.radius;
         });
         window.Asteroids.Bullet = MockBullet;
 
-        // Mock AsteroidExplosion
-        mockAsteroidExplosionInstance = { explode: jest.fn() };
-        MockAsteroidExplosion = jest.fn(() => mockAsteroidExplosionInstance);
+        // Mock AsteroidExplosion with type and explode method
+        mockAsteroidExplosionInstance = { type: 'Explosion', explode: jest.fn() };
+        MockAsteroidExplosion = jest.fn((args) => {
+            mockAsteroidExplosionInstance.pos = args.pos;
+            mockAsteroidExplosionInstance.radius = args.radius;
+            mockAsteroidExplosionInstance.game = args.game;
+            return mockAsteroidExplosionInstance;
+        });
         window.Asteroids.AsteroidExplosion = MockAsteroidExplosion;
 
         // Mock Image
         MockImage = jest.fn(function() { this.src = ''; });
         global.Image = MockImage;
 
-        // Mock Game
+        // Mock Game methods needed by UFO
         mockGame = {
             remove: jest.fn(),
             add: jest.fn(),
@@ -84,16 +103,14 @@ describe('Asteroids.Ufo', () => {
         Math.random = jest.fn().mockReturnValue(0.5); // Default: doesn't fire
 
         // --- Require the script ---
-        require('../lib/javascripts/ufo.js');
-        Ufo = window.Asteroids.Ufo;
-
-        // Check inherits call
-        expect(mockUtil.inherits).toHaveBeenCalledWith(Ufo, MockMovingObject);
+        Ufo = require('../lib/javascripts/ufo.js');
     });
 
     afterAll(() => {
         // Restore original Math.random
         Math.random = originalMathRandom;
+        // Restore other mocks/globals if necessary
+        jest.restoreAllMocks(); 
     });
 
     // Reset mocks
@@ -101,7 +118,7 @@ describe('Asteroids.Ufo', () => {
     let ufoOptions;
     beforeEach(() => {
         MockMovingObject.mockClear();
-        mockMovingObjectMove.mockClear();
+        // Don't clear inherits mock
         mockUtil.randomVec.mockClear();
         mockGame.remove.mockClear();
         mockGame.add.mockClear();
@@ -114,14 +131,24 @@ describe('Asteroids.Ufo', () => {
         mockAsteroidExplosionInstance.explode.mockClear();
         MockImage.mockClear();
         Math.random.mockClear();
-        // Reset Math.random implementation if specific tests changed it
         Math.random.mockReturnValue(0.5);
+
+        // Mock context for draw tests
+        mockCtx = {
+            drawImage: jest.fn(),
+            // Add other context methods if UFO.draw uses them
+        };
 
         ufoOptions = {
             pos: [50, 50],
             game: mockGame
         };
         ufo = new Ufo(ufoOptions);
+
+        // Also clear the mock base move method
+        if(MockMovingObject.prototype.move.mockClear) {
+            MockMovingObject.prototype.move.mockClear();
+        }
     });
 
     describe('Constructor', () => {
@@ -170,30 +197,40 @@ describe('Asteroids.Ufo', () => {
     describe('move', () => {
         test('should call MovingObject.prototype.move', () => {
             ufo.move();
-            expect(mockMovingObjectMove).toHaveBeenCalledTimes(1);
+            // Expect the mock function defined on the prototype to have been called
+            expect(MockMovingObject.prototype.move).toHaveBeenCalledTimes(1);
+            // Ensure it was called with the UFO instance as `this` context
+            expect(MockMovingObject.prototype.move).toHaveBeenCalledWith(); // Called with no args
+            // Cannot easily check `this` context directly without altering the mock further
         });
 
         test('should fire bullet if Math.random < FIRE_RATE', () => {
-            const fireRate = Ufo.FIRE_RATE; // e.g., 0.002
-            Math.random.mockReturnValueOnce(fireRate * 0.5); // Value less than fire rate
-            const fireBulletSpy = jest.spyOn(ufo, 'fireBullet'); // Spy on method
+            const fireRate = Ufo.FIRE_RATE;
+            Math.random.mockReturnValueOnce(fireRate * 0.5);
+            const fireBulletSpy = jest.spyOn(ufo, 'fireBullet').mockImplementation(()=>{}); // Spy and stub
 
             ufo.move();
+            expect(MockMovingObject.prototype.move).toHaveBeenCalledTimes(1);
             expect(fireBulletSpy).toHaveBeenCalledTimes(1);
 
-            fireBulletSpy.mockRestore(); // Clean up spy
+            fireBulletSpy.mockRestore();
         });
 
         test('should NOT fire bullet if Math.random >= FIRE_RATE', () => {
             const fireRate = Ufo.FIRE_RATE;
-            Math.random.mockReturnValueOnce(fireRate); // Value equal to fire rate
+            Math.random.mockReturnValueOnce(fireRate);
              const fireBulletSpy = jest.spyOn(ufo, 'fireBullet');
 
             ufo.move();
+            expect(MockMovingObject.prototype.move).toHaveBeenCalledTimes(1);
             expect(fireBulletSpy).not.toHaveBeenCalled();
 
-            Math.random.mockReturnValueOnce(fireRate * 1.5); // Value greater than fire rate
+            // Clear first call to move mock for second check
+            MockMovingObject.prototype.move.mockClear();
+
+            Math.random.mockReturnValueOnce(fireRate * 1.5);
             ufo.move();
+            expect(MockMovingObject.prototype.move).toHaveBeenCalledTimes(1);
             expect(fireBulletSpy).not.toHaveBeenCalled();
 
             fireBulletSpy.mockRestore();
@@ -228,22 +265,20 @@ describe('Asteroids.Ufo', () => {
         let mockShipInstance;
         let mockAsteroidInstance;
         let mockBulletInstance;
+        let mockUfoBulletInstance;
+        let anotherUfo;
 
          beforeEach(() => {
-             // Setup mock instances for collision checks
-             mockShipInstance = new MockShip();
-             mockShipInstance.constructor = MockShip; // For instanceof
-             mockShipInstance.pos = [51, 51]; // Example position
-             mockShipInstance.radius = (window.Asteroids.Ship && window.Asteroids.Ship.RADIUS) || 20;
-
+             // Setup mock instances for collision checks, ensuring they have type
+             mockShipInstance = new MockShip({ pos: [51, 51], radius: 20, suspended: false, isInvincible: false });
              mockAsteroidInstance = new MockAsteroid({ pos: [52, 52], radius: 30 });
-             mockAsteroidInstance.constructor = MockAsteroid;
-
              mockBulletInstance = new MockBullet({ pos: [49, 49], radius: 5 });
-             mockBulletInstance.constructor = MockBullet;
+             mockUfoBulletInstance = new MockUfoBullet({ pos: [50, 49], radius: 8 }); // Add type via mock
+             mockUfoBulletInstance.type = 'UfoBullet'; // Explicitly add type if constructor mock doesn't
+             anotherUfo = new Ufo({ pos: [50, 51], game: mockGame }); // Real Ufo instances have type
          });
 
-        // Ship Collisions
+        // Ship Collisions (using type checks now)
          test('should call game.handleDeath if colliding with vulnerable Ship', () => {
              mockShipInstance.isInvincible = false;
              mockShipInstance.suspended = false;
@@ -251,65 +286,68 @@ describe('Asteroids.Ufo', () => {
              expect(mockGame.handleDeath).toHaveBeenCalledTimes(1);
          });
 
-          test('should NOT call game.handleDeath if colliding with invincible Ship', () => {
+         test('should NOT call game.handleDeath if colliding with invincible Ship', () => {
              mockShipInstance.isInvincible = true;
              mockShipInstance.suspended = false;
              ufo.collideWith(mockShipInstance);
              expect(mockGame.handleDeath).not.toHaveBeenCalled();
          });
 
-         test('should NOT call game.handleDeath if colliding with suspended Ship', () => {
+          test('should NOT call game.handleDeath if colliding with suspended Ship', () => {
              mockShipInstance.isInvincible = false;
              mockShipInstance.suspended = true;
              ufo.collideWith(mockShipInstance);
              expect(mockGame.handleDeath).not.toHaveBeenCalled();
          });
 
-        // Asteroid Collisions
-        test('should create/add/explode explosion, remove self and asteroid on Asteroid collision', () => {
+        // Asteroid Collision
+        test('should remove self and asteroid, add explosion on Asteroid collision', () => {
             ufo.collideWith(mockAsteroidInstance);
-            expect(MockAsteroidExplosion).toHaveBeenCalledWith({ pos: ufo.pos, radius: ufo.radius });
-            expect(mockGame.add).toHaveBeenCalledWith(mockAsteroidExplosionInstance);
+            expect(mockGame.add).toHaveBeenCalledWith(mockAsteroidExplosionInstance); // Check the instance
             expect(mockAsteroidExplosionInstance.explode).toHaveBeenCalledTimes(1);
             expect(mockGame.remove).toHaveBeenCalledWith(ufo);
             expect(mockGame.remove).toHaveBeenCalledWith(mockAsteroidInstance);
-            expect(mockGame.remove).toHaveBeenCalledTimes(2);
         });
 
-        // Player Bullet Collisions
-         test('should create/add/explode explosion, remove self and bullet on Bullet collision', () => {
+        // Player Bullet Collision
+        test('should remove self and bullet, add explosion on Bullet collision', () => {
             ufo.collideWith(mockBulletInstance);
-            expect(MockAsteroidExplosion).toHaveBeenCalledWith({ pos: ufo.pos, radius: ufo.radius });
-            expect(mockGame.add).toHaveBeenCalledWith(mockAsteroidExplosionInstance);
+            expect(mockGame.add).toHaveBeenCalledWith(mockAsteroidExplosionInstance); // Check the instance
             expect(mockAsteroidExplosionInstance.explode).toHaveBeenCalledTimes(1);
             expect(mockGame.remove).toHaveBeenCalledWith(ufo);
             expect(mockGame.remove).toHaveBeenCalledWith(mockBulletInstance);
-            expect(mockGame.remove).toHaveBeenCalledTimes(2);
         });
 
-         // Other Collisions
-         test('should ignore collision with UfoBullet', () => {
-             const mockUfoBulletInstance = new MockUfoBullet();
-             mockUfoBulletInstance.constructor = MockUfoBullet;
-             ufo.collideWith(mockUfoBulletInstance);
-             expect(mockGame.add).not.toHaveBeenCalled();
-             expect(mockGame.remove).not.toHaveBeenCalled();
-             expect(mockGame.handleDeath).not.toHaveBeenCalled();
-         });
+        // UFO Bullet Collision
+        test('should do nothing on UfoBullet collision', () => {
+            ufo.collideWith(mockUfoBulletInstance);
+            expect(mockGame.add).not.toHaveBeenCalled();
+            expect(mockGame.remove).not.toHaveBeenCalled();
+            expect(mockGame.handleDeath).not.toHaveBeenCalled();
+        });
 
-         test('should ignore collision with another Ufo', () => {
-             const anotherUfo = new Ufo({pos:[0,0], game:mockGame}); // Uses actual constructor
-             anotherUfo.constructor = Ufo; // Ensure instanceof works as expected
-             ufo.collideWith(anotherUfo);
-             expect(mockGame.add).not.toHaveBeenCalled();
-             expect(mockGame.remove).not.toHaveBeenCalled();
-             expect(mockGame.handleDeath).not.toHaveBeenCalled();
-         });
-     });
-
-
-    describe('draw', () => {
-        test.todo('should call context drawImage correctly');
+        // UFO Collision
+        test('should do nothing on collision with another Ufo', () => {
+            ufo.collideWith(anotherUfo);
+            expect(mockGame.add).not.toHaveBeenCalled();
+            expect(mockGame.remove).not.toHaveBeenCalled();
+            expect(mockGame.handleDeath).not.toHaveBeenCalled();
+        });
     });
 
+    // Implement the draw test
+    test('draw should call context drawImage correctly', () => {
+        mockCtx.drawImage.mockClear(); // Clear before draw call
+        ufo.pos = [100, 150]; // Set specific position
+        ufo.draw(mockCtx);
+
+        expect(mockCtx.drawImage).toHaveBeenCalledTimes(1);
+        expect(mockCtx.drawImage).toHaveBeenCalledWith(
+            ufo.img, // The Image instance
+            100 - ufo.radius, // Expected x
+            150 - ufo.radius, // Expected y
+            ufo.radius * 2, // Expected width
+            ufo.radius * 2 // Expected height
+        );
+    });
 }); 

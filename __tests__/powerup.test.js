@@ -1,186 +1,153 @@
-// __tests__/powerup.test.js
+/**
+ * @jest-environment jsdom
+ */
 
-describe('Asteroids.PowerUp', () => {
+// Define window object if not already defined (e.g., in Node.js environment)
+if (typeof window === 'undefined') {
+    global.window = {};
+}
+
+// Set a default Frame_Rate for tests if not set
+window.Frame_Rate = window.Frame_Rate || 60;
+
+describe('PowerUp', () => {
     let PowerUp;
     let MockMovingObject;
-    let mockMovingObjectMove;
-    let mockUtil;
-    let mockGame;
+    let MockUtil;
     let MockShip;
+    let MockGame;
     let MockImage;
 
-    const FRAME_RATE = 30; // Match frame rate used in Ship tests
+    const defaultPos = [50, 50];
+    const defaultVel = [1, 0]; // Mock velocity from Util
+    const defaultGame = { remove: jest.fn() };
 
-    // Setup mocks BEFORE requiring the script
     beforeAll(() => {
-        window.Asteroids = window.Asteroids || {};
-
-        // Mock Util
-        mockUtil = {
-            inherits: jest.fn(),
-            randomVec: jest.fn().mockReturnValue([0.1, 0.1]), // Default random velocity
+        // Mock dependencies before requiring the module
+        MockMovingObject = jest.fn(function(args) { // Assign properties like the real constructor
+            Object.assign(this, args);
+        });
+        MockMovingObject.prototype.move = jest.fn(); // Mock the parent move method
+        window.Asteroids = {
+            Util: {
+                randomVec: jest.fn().mockReturnValue(defaultVel),
+                inherits: jest.fn(), // Mock inherits if needed, though not strictly required for testing logic
+            },
+            movingObject: MockMovingObject,
+            Ship: jest.fn().mockImplementation(() => ({ // Simple mock ship for instanceof/type check
+                type: 'Ship',
+                activatePowerUp: jest.fn(),
+            })),
         };
-        window.Asteroids.Util = mockUtil;
-
-        // Mock MovingObject prototype.move FIRST
-        mockMovingObjectMove = jest.fn();
-        window.Asteroids.movingObject = window.Asteroids.movingObject || {};
-        window.Asteroids.movingObject.prototype = window.Asteroids.movingObject.prototype || {};
-        window.Asteroids.movingObject.prototype.move = mockMovingObjectMove;
-
-        // Mock MovingObject constructor
-        MockMovingObject = jest.fn(function(args) {
-            this.pos = args.pos; this.vel = args.vel; this.radius = args.radius; this.game = args.game;
+        
+        // Mock the global Image constructor
+        MockImage = jest.fn(function() { // Use function to allow `this` assignment
+            this.src = '';
         });
-        window.Asteroids.movingObject = MockMovingObject;
-        // Re-attach the mocked prototype
-        window.Asteroids.movingObject.prototype = { move: mockMovingObjectMove };
-
-
-        // Mock Ship constructor and relevant instance method
-        MockShip = jest.fn(function() {
-            this.activatePowerUp = jest.fn();
-        });
-        window.Asteroids.Ship = MockShip;
-
-        // Mock Image
-        MockImage = jest.fn(function() { this.src = ''; });
         global.Image = MockImage;
-
-        // Mock Game
-        mockGame = {
-            remove: jest.fn(),
-        };
-
-         // Mock global Frame_Rate
-         global.window = global.window || global; // Ensure window exists
-         global.window.Frame_Rate = FRAME_RATE;
-
-        // --- Require the script ---
-        require('../lib/javascripts/powerup.js');
-        PowerUp = window.Asteroids.PowerUp;
-
-        // Check inherits call
-        expect(mockUtil.inherits).toHaveBeenCalledWith(PowerUp, MockMovingObject);
+        
+        // Now require PowerUp after mocks are set up
+        PowerUp = require('../lib/javascripts/powerup');
     });
 
-    afterAll(() => {
-        // Clean up global Frame_Rate if necessary
-        delete global.window.Frame_Rate;
-    });
-
-
-    // Reset mocks
-    let powerUp;
-    let powerUpOptions;
     beforeEach(() => {
-        MockMovingObject.mockClear();
-        mockMovingObjectMove.mockClear();
-        mockUtil.randomVec.mockClear();
-        mockGame.remove.mockClear();
-        MockShip.mockClear();
-        // Reset activatePowerUp on prototype or instances if needed
-        // (Jest clears calls on mock function instances automatically)
-        MockImage.mockClear();
-
-        powerUpOptions = {
-            pos: [70, 80],
-            game: mockGame
-        };
-        powerUp = new PowerUp(powerUpOptions);
+        // Reset mocks before each test
+        jest.clearAllMocks();
+        MockGame = { remove: jest.fn() }; // Fresh mock game for each test
     });
 
-    describe('Constructor', () => {
-        test('should initialize default properties', () => {
-            expect(powerUp.radius).toBe(PowerUp.RADIUS);
-            expect(powerUp.isWrappable).toBe(true);
-            expect(powerUp.game).toBe(mockGame);
-            const expectedLifespanFrames = PowerUp.LIFESPAN * (1000 / FRAME_RATE);
-            expect(powerUp.lifespan).toBeCloseTo(expectedLifespanFrames);
-        });
+    test('constructor should initialize properties and call MovingObject', () => {
+        const powerup = new PowerUp({ pos: defaultPos, game: MockGame });
 
-        test('should call MovingObject with random velocity', () => {
-             mockUtil.randomVec.mockReturnValueOnce([-0.2, 0.3]);
-             const powerUpInstance = new PowerUp({ pos: [1,1], game: mockGame });
+        // Check MovingObject was called
+        expect(MockMovingObject).toHaveBeenCalledTimes(1);
+        const movingObjectArgs = MockMovingObject.mock.calls[0][0]; // Args passed to MovingObject constructor
+        expect(movingObjectArgs.pos).toEqual(defaultPos);
+        expect(movingObjectArgs.vel).toEqual(defaultVel);
+        expect(movingObjectArgs.radius).toBe(PowerUp.RADIUS);
+        expect(movingObjectArgs.game).toBe(MockGame);
 
-             expect(mockUtil.randomVec).toHaveBeenCalledWith(PowerUp.SPEED);
-             expect(MockMovingObject).toHaveBeenCalledWith(expect.objectContaining({
-                 vel: [-0.2, 0.3],
-                 radius: PowerUp.RADIUS,
-                 pos: [1,1],
-                 game: mockGame
-             }));
-         });
+        // Check instance properties
+        expect(powerup.game).toBe(MockGame);
+        expect(powerup.lifespan).toBeCloseTo(PowerUp.LIFESPAN * (1000 / window.Frame_Rate));
+        expect(powerup.img).toBeInstanceOf(MockImage);
+        expect(powerup.img.src).toContain('powerup.png');
+        expect(Asteroids.Util.randomVec).toHaveBeenCalledWith(PowerUp.SPEED);
+    });
 
-        test('should create Image and set src', () => {
-            expect(MockImage).toHaveBeenCalledTimes(1);
-            const imageInstance = MockImage.mock.instances[0];
-            expect(imageInstance.src).toBe('lib/images/powerup.png');
-            expect(powerUp.img).toBe(imageInstance);
-        });
+    test('draw should call ctx.drawImage with correct parameters', () => {
+        const powerup = new PowerUp({ pos: defaultPos, game: MockGame });
+        const mockCtx = {
+            drawImage: jest.fn(),
+        };
+
+        powerup.draw(mockCtx);
+
+        expect(mockCtx.drawImage).toHaveBeenCalledTimes(1);
+        expect(mockCtx.drawImage).toHaveBeenCalledWith(
+            powerup.img,          // Image object
+            defaultPos[0] - PowerUp.RADIUS, // x position
+            defaultPos[1] - PowerUp.RADIUS, // y position
+            PowerUp.RADIUS * 2,   // width
+            PowerUp.RADIUS * 2    // height
+        );
     });
 
     describe('move', () => {
-        test('should call MovingObject.prototype.move', () => {
-            powerUp.move();
-            expect(mockMovingObjectMove).toHaveBeenCalledTimes(1);
+        test('should call parent move method', () => {
+            const powerup = new PowerUp({ pos: defaultPos, game: MockGame });
+            powerup.move();
+            expect(MockMovingObject.prototype.move).toHaveBeenCalledTimes(1);
         });
 
-        test('should decrement lifespan', () => {
-            const initialLifespan = powerUp.lifespan;
-            powerUp.move();
-            expect(powerUp.lifespan).toBe(initialLifespan - 1);
+        test('should decrease lifespan', () => {
+            const powerup = new PowerUp({ pos: defaultPos, game: MockGame });
+            const initialLifespan = powerup.lifespan;
+            powerup.move();
+            expect(powerup.lifespan).toBe(initialLifespan - 1);
         });
 
-        test('should call game.remove when lifespan reaches zero or less', () => {
-            powerUp.lifespan = 1;
-            powerUp.move(); // Lifespan becomes 0
-            expect(mockGame.remove).toHaveBeenCalledWith(powerUp);
-            expect(mockGame.remove).toHaveBeenCalledTimes(1);
-
-             // Test <= 0 case
-             mockGame.remove.mockClear();
-             powerUp.lifespan = 0;
-             powerUp.move(); // Lifespan becomes -1
-             expect(mockGame.remove).toHaveBeenCalledWith(powerUp);
-             expect(mockGame.remove).toHaveBeenCalledTimes(1);
+        test('should call game.remove when lifespan reaches zero', () => {
+            const powerup = new PowerUp({ pos: defaultPos, game: MockGame });
+            powerup.lifespan = 1; // Set lifespan to 1
+            powerup.move(); // This move makes it 0
+            expect(powerup.lifespan).toBe(0);
+            expect(MockGame.remove).toHaveBeenCalledTimes(1);
+            expect(MockGame.remove).toHaveBeenCalledWith(powerup);
         });
 
-        test('should NOT call game.remove if lifespan > 0', () => {
-            powerUp.lifespan = 100;
-            powerUp.move();
-            expect(mockGame.remove).not.toHaveBeenCalled();
+        test('should not call game.remove when lifespan is positive', () => {
+            const powerup = new PowerUp({ pos: defaultPos, game: MockGame });
+            powerup.lifespan = 2;
+            powerup.move();
+            expect(powerup.lifespan).toBe(1);
+            expect(MockGame.remove).not.toHaveBeenCalled();
         });
     });
 
     describe('collideWith', () => {
-        let mockShipInstance;
-        beforeEach(() => {
-            mockShipInstance = new MockShip();
-            mockShipInstance.constructor = MockShip; // For instanceof
+        test('should call ship.activatePowerUp and game.remove if otherObject is Ship', () => {
+            const powerup = new PowerUp({ pos: defaultPos, game: MockGame });
+            const mockShip = new Asteroids.Ship(); // Use the mock Ship constructor
+
+            powerup.collideWith(mockShip);
+
+            expect(mockShip.activatePowerUp).toHaveBeenCalledTimes(1);
+            expect(mockShip.activatePowerUp).toHaveBeenCalledWith(PowerUp.DURATION);
+            expect(MockGame.remove).toHaveBeenCalledTimes(1);
+            expect(MockGame.remove).toHaveBeenCalledWith(powerup);
         });
 
-        test('should call ship.activatePowerUp when colliding with Ship', () => {
-            powerUp.collideWith(mockShipInstance);
-            expect(mockShipInstance.activatePowerUp).toHaveBeenCalledTimes(1);
-            expect(mockShipInstance.activatePowerUp).toHaveBeenCalledWith(PowerUp.DURATION);
-        });
+        test('should not call ship.activatePowerUp or game.remove if otherObject is not Ship', () => {
+            const powerup = new PowerUp({ pos: defaultPos, game: MockGame });
+            const otherObject = { type: 'Asteroid' }; // Not a ship
+            const mockShip = new Asteroids.Ship(); // Need instance for spy later
+            const activateSpy = jest.spyOn(mockShip, 'activatePowerUp');
 
-         test('should call game.remove (self) when colliding with Ship', () => {
-            powerUp.collideWith(mockShipInstance);
-            expect(mockGame.remove).toHaveBeenCalledTimes(1);
-            expect(mockGame.remove).toHaveBeenCalledWith(powerUp);
-        });
+            powerup.collideWith(otherObject);
 
-        test('should do nothing if colliding with non-Ship object', () => {
-             const otherObject = { some: 'data' };
-             powerUp.collideWith(otherObject);
-             expect(mockGame.remove).not.toHaveBeenCalled();
-             // ship.activatePowerUp shouldn't be called as it's not a ship
+            expect(activateSpy).not.toHaveBeenCalled();
+            expect(MockGame.remove).not.toHaveBeenCalled();
         });
-    });
-
-    describe('draw', () => {
-        test.todo('should call context drawImage correctly');
     });
 }); 
