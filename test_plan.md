@@ -125,9 +125,11 @@ This plan outlines the steps to create a comprehensive test suite for the Astero
     -   [X] Verify `collideWith` is NOT called when `isCollidedWith` returns false.
     -   [X] Test handling multiple objects and collisions.
     -   [X] Test handling of objects missing `collideWith` or `isCollidedWith`.
-    -   [ ] Verify score increases correctly for bullet hits. (TODO: Needs specific collision outcome tests)
-    -   [ ] Verify asteroid splitting logic adds new, smaller asteroids and removes the original. (TODO: Needs specific collision outcome tests)
-    -   [ ] Verify explosion objects are added upon destruction events. (TODO: Needs specific collision outcome tests)
+    -   [X] Verify score increases correctly for bullet hits (Asteroid, UFO). (Verified via outcome tests)
+    -   [X] Verify asteroid splitting logic adds new, smaller asteroids and removes the original. (Verified via outcome tests)
+    -   [X] Verify explosion objects are added upon destruction events (Asteroid, UFO). (Verified via outcome tests)
+    -   [X] Verify ship death (`handleDeath`) is triggered on relevant collisions (Ship-Asteroid, Ship-UFO, Ship-UfoBullet). (Verified via outcome tests)
+    -   [X] Verify power-up collection removes power-up and calls effect application. (Verified via outcome tests)
 
 -   [X] **Integration Tests: `lib/javascripts/game.js` - Game State & Levels**
     -   [X] Test `startGameHandler`: Verify state transition from attract, ship creation, DOM updates, sequence start.

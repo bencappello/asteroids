@@ -14,6 +14,8 @@ Implement a comprehensive Jest test suite for the Asteroids game based on the `t
     -   **Level Progression:** `startPreLevelSequence`, `handleCountdownTick`, `startLevelGameplay`, `advanceLevel`.
     -   **Spawning:** `getMaxUfosForLevel`, `maybeAddUfo`, `maybeSpawnPowerUp`.
     -   **Utility/Helpers:** `wrap`, `isOutOfBounds`, `randomPosition`, `isSpawningAllowed`, `secondsToFrames`, `resetPowerupSpawnTimer`.
+    -   **Refined `checkCollisions`:** Added tests verifying specific outcomes (score changes, object removal/creation, ship death, powerup collection) for major collision types (Bullet-Asteroid, Ship-Asteroid, Ship-PowerUp, Bullet-UFO, Ship-UFO, Ship-UfoBullet). The asteroid splitting outcome remains untested.
+    -   **Completed `checkCollisions` Refinement:** Added tests for asteroid splitting (large asteroid hit) and destruction (small asteroid hit), completing the planned outcome tests for this method.
     -   *(Note: Core game loop `step` and `checkCollisions` tests exist but may need refinement, especially regarding collision outcomes).* 
 
 ## Issues Encountered & Resolutions
@@ -25,6 +27,10 @@ Implement a comprehensive Jest test suite for the Asteroids game based on the `t
 -   **Dependency Loading (`Util`, `PowerUp`, etc.):** Various errors occurred due to scripts being loaded before their dependencies (`window.Asteroids.*` namespaces, mocks) were properly set up. Resolved by adjusting the `require` calls within the test file setup blocks (`beforeAll`, `beforeEach`). Ensured `Util` was required before spying on its methods in `game.test.js`.
 -   **Mock Constructor Behavior (`Image`, `MovingObject`):** Initial mocks using arrow functions (`jest.fn(() => ({}))`) failed `instanceof` checks or didn't correctly assign properties via `parent.call(this, ...)`. Resolved by using standard function syntax (`jest.fn(function() { ... })`) for constructors.
 -   **Ship Flashing Logic:** Tests for the ship's invincibility flash in `ship.test.js` initially failed due to incorrect timer values used in the test cases relative to the flashing condition logic (`Math.floor(timer / 40) % 2 === 0`). Resolved by adjusting test timer values to correctly trigger the 'on' and 'off' states and updating assertions.
+-   **Refining `checkCollisions` tests** to verify specific *outcomes* (score changes, asteroid splits, explosion creation) rather than just method calls. (Partially done - major outcomes covered, splitting remains).
+-   **Completed `checkCollisions` Refinement:** Tests now verify specific outcomes (score changes, object removal/creation, ship death, powerup collection, asteroid splitting/destruction) for all major collision types.
+-   Testing the main `step` method logic, especially game over sequence and high score handling.
+-   **Completed `step` Refinement:** Added tests to verify the game over sequence after the explosion delay, including the high score check and the display of the correct end-game UI (game over screen vs. high score input modal).
 
 ## Current State
 
@@ -39,4 +45,4 @@ Implement a comprehensive Jest test suite for the Asteroids game based on the `t
     -   The main `step` method logic, especially game over sequence and high score handling.
     -   Refining `checkCollisions` tests to verify specific *outcomes* (score changes, asteroid splits, explosion creation) rather than just method calls.
 3.  Implement Phase 4: Integration tests for `lib/javascripts/gameView.js` (`__tests__/gameView.test.js`).
-4.  Implement Phase 5: End-to-end tests using Playwright or Cypress. 
+4.  Implement Phase 5: End-to-End tests using Playwright or Cypress. 

@@ -1,9 +1,23 @@
 const GameView = require('../lib/javascripts/gameView');
 const _ = require('lodash'); // Import lodash to mock
 
-// Mock lodash throttle
+// Keep track of the mocked throttled functions
+let mockThrottledFuncs = {};
+
 jest.mock('lodash', () => ({
-  throttle: jest.fn(fn => fn) // Simple mock: return the function passed to it
+  throttle: jest.fn((fn, delay, options) => {
+    // Create a NEW mock function for the throttled result
+    const throttledFn = jest.fn((...args) => {
+      // Optionally, call the original function if needed for side effects
+      // fn.apply(null, args); 
+      // For testing calls, we often don't need to execute the original fn
+    });
+    throttledFn.cancel = jest.fn(); // Mock cancel if needed
+    // Store it for potential later access/clearing if needed by key (e.g., function name)
+    const key = fn.name || 'anonymousThrottle';
+    mockThrottledFuncs[key] = throttledFn;
+    return throttledFn; // Return the NEW mock
+  })
 }));
 
 describe('GameView', () => {
@@ -13,7 +27,9 @@ describe('GameView', () => {
 
   beforeEach(() => {
     // Clear mocks
-    _.throttle.mockClear();
+    // _.throttle.mockClear(); // Moved clearing to afterEach/test level if needed
+    // Clear the stored throttled function mocks
+    Object.values(mockThrottledFuncs).forEach(mockFn => mockFn.mockClear());
 
     // Define global mocks *before* creating GameView
     global.Frame_Rate = 30;
@@ -149,118 +165,144 @@ describe('GameView', () => {
   });
 
   describe('stopLoop', () => {
-     test('clears the interval if intervalID exists', () => {
-       const clearIntervalSpy = jest.spyOn(window, 'clearInterval'); // Spy on window.clearInterval
-       gameView.intervalID = 999;
-       gameView.stopLoop();
-       expect(clearIntervalSpy).toHaveBeenCalledWith(999);
-       expect(gameView.intervalID).toBeNull();
-       clearIntervalSpy.mockRestore();
+     let clearIntervalSpy; // Declare spy at suite level
+
+     beforeEach(() => {
+         // Spy on clearInterval globally
+         clearIntervalSpy = jest.spyOn(global, 'clearInterval');
+         // Reset intervalID before each stopLoop test
+         gameView.intervalID = null; 
      });
 
-     test('does nothing if intervalID is null', () => {
-       const clearIntervalSpy = jest.spyOn(window, 'clearInterval'); // Spy on window.clearInterval
-       gameView.intervalID = null;
-       gameView.stopLoop();
-       expect(clearIntervalSpy).not.toHaveBeenCalled();
-       clearIntervalSpy.mockRestore();
+     afterEach(() => {
+        // Restore the spy and ensure ID is nullified after each test
+        clearIntervalSpy.mockRestore();
+        gameView.intervalID = null;
+     });
+
+     test('should clear the interval timer if intervalID is set', () => {
+         // Simulate an active interval
+         gameView.intervalID = 9876;
+         gameView.stopLoop();
+
+         // Verify clearInterval was called with the correct ID
+         expect(clearIntervalSpy).toHaveBeenCalledTimes(1);
+         expect(clearIntervalSpy).toHaveBeenCalledWith(9876);
+         // Verify intervalID was reset
+         expect(gameView.intervalID).toBeNull();
+     });
+
+     test('should do nothing if intervalID is already null', () => {
+         // Ensure intervalID is null (done in beforeEach)
+         // gameView.intervalID = null; 
+         gameView.stopLoop();
+
+         // Verify clearInterval was not called
+         expect(clearIntervalSpy).not.toHaveBeenCalled(); // Use the suite-level spy variable
+         // Verify intervalID remains null
+         expect(gameView.intervalID).toBeNull();
      });
   });
 
   describe('bindKeyHandlers', () => {
-    test('initializes keyState to an empty object', () => {
-      gameView.keyState = undefined; // Ensure it's not set before the call
+    test('should initialize keyState to an empty object', () => {
+      gameView.keyState = undefined;
       gameView.bindKeyHandlers();
       expect(gameView.keyState).toEqual({});
     });
 
-    test('creates shipFire function using _.throttle with ship.fireBullet', () => {
+    test('should create shipFire function using _.throttle', () => {
       gameView.bindKeyHandlers();
-      // Check the throttle function on the GLOBAL mock
+      // Check that _.throttle was called
       expect(global._.throttle).toHaveBeenCalledTimes(1);
-      // Check that throttle was called with *a function* and the correct options
-      expect(global._.throttle).toHaveBeenCalledWith(expect.any(Function), 150, {trailing: false});
+      expect(global._.throttle).toHaveBeenCalledWith(
+        expect.any(Function), // The original ship.fireBullet (or wrapper)
+        150, 
+        { trailing: false }
+      );
+      // Check that gameView.shipFire is defined as a function
       expect(gameView.shipFire).toBeDefined();
       expect(typeof gameView.shipFire).toBe('function');
     });
 
-    // Note: Testing the actual event listener binding (this.downKeyState, this.upKeyState)
-    // is harder without a full DOM environment or more complex mocking.
-    // We primarily test the *effect* of these handlers in the assessKeys tests.
+    // Note: Testing the actual document event listener binding is complex
+    // and less critical than testing the resulting state changes in assessKeys.
   });
 
   describe('assessKeys', () => {
-    let shipFireSpy;
-
     beforeEach(() => {
-      // Need to call bindKeyHandlers to set up keyState and shipFire
+      // Ensure key handlers are bound and shipFire exists before each test
       gameView.bindKeyHandlers();
-      // Spy on the (mocked throttle wrapper) function
-      shipFireSpy = jest.spyOn(gameView, 'shipFire');
-      // Reset ship mocks for each assessKeys test
+
+      // Reset keyState and ship mock calls
+      gameView.keyState = {}; // Initialize as empty object, matching bindKeyHandlers
       mockGameInstance.ship.power.mockClear();
       mockGameInstance.ship.rotate.mockClear();
-      mockGameInstance.ship.fireBullet.mockClear(); // Also clear the original func mock
+      // Also clear the underlying fireBullet mock
+      mockGameInstance.ship.fireBullet.mockClear(); 
+
+      // Ensure preLevelState is null by default
+      mockGameInstance.preLevelState = null;
     });
 
-    afterEach(() => {
-      shipFireSpy.mockRestore();
-    });
-
-    test('does nothing if currentGame.preLevelState is set', () => {
-      currentGame.preLevelState = { countdown: 3 }; // Simulate pre-level state
-      gameView.keyState = { 38: true, 37: true, 32: true }; // Set some keys
+    test('should do nothing if currentGame.preLevelState is active', () => {
+      mockGameInstance.preLevelState = { countdown: 3 }; // Simulate pre-level active
+      // Set keys using key codes
+      gameView.keyState[38] = true; // Up
+      gameView.keyState[37] = true; // Left
+      gameView.keyState[32] = true; // Space
       gameView.assessKeys();
       expect(mockGameInstance.ship.power).not.toHaveBeenCalled();
       expect(mockGameInstance.ship.rotate).not.toHaveBeenCalled();
-      expect(gameView.shipFire).not.toHaveBeenCalled();
+      expect(mockGameInstance.ship.fireBullet).not.toHaveBeenCalled(); // Check underlying mock
     });
 
-    test('calls ship.power(-1) for up arrow (38)', () => {
-      gameView.keyState[38] = true;
+    test('should call ship.power(-1) for key code 38 (up)', () => {
+      gameView.keyState[38] = true; // Set key using key code
       gameView.assessKeys();
       expect(mockGameInstance.ship.power).toHaveBeenCalledWith(-1);
       expect(mockGameInstance.ship.power).toHaveBeenCalledTimes(1);
       expect(mockGameInstance.ship.rotate).not.toHaveBeenCalled();
-      expect(gameView.shipFire).not.toHaveBeenCalled();
+      expect(mockGameInstance.ship.fireBullet).not.toHaveBeenCalled(); // Check underlying mock
     });
 
-    test('calls ship.power(1) for down arrow (40)', () => {
-      gameView.keyState[40] = true;
+    test('should call ship.power(1) for key code 40 (down)', () => {
+      gameView.keyState[40] = true; // Set key using key code
       gameView.assessKeys();
       expect(mockGameInstance.ship.power).toHaveBeenCalledWith(1);
       expect(mockGameInstance.ship.power).toHaveBeenCalledTimes(1);
       expect(mockGameInstance.ship.rotate).not.toHaveBeenCalled();
-      expect(gameView.shipFire).not.toHaveBeenCalled();
+      expect(mockGameInstance.ship.fireBullet).not.toHaveBeenCalled(); // Check underlying mock
     });
 
-    test('calls ship.rotate(-1) for left arrow (37)', () => {
-      gameView.keyState[37] = true;
+    test('should call ship.rotate(-1) for key code 37 (left)', () => {
+      gameView.keyState[37] = true; // Set key using key code
       gameView.assessKeys();
       expect(mockGameInstance.ship.rotate).toHaveBeenCalledWith(-1);
       expect(mockGameInstance.ship.rotate).toHaveBeenCalledTimes(1);
       expect(mockGameInstance.ship.power).not.toHaveBeenCalled();
-      expect(gameView.shipFire).not.toHaveBeenCalled();
+      expect(mockGameInstance.ship.fireBullet).not.toHaveBeenCalled(); // Check underlying mock
     });
 
-    test('calls ship.rotate(1) for right arrow (39)', () => {
-      gameView.keyState[39] = true;
+    test('should call ship.rotate(1) for key code 39 (right)', () => {
+      gameView.keyState[39] = true; // Set key using key code
       gameView.assessKeys();
       expect(mockGameInstance.ship.rotate).toHaveBeenCalledWith(1);
       expect(mockGameInstance.ship.rotate).toHaveBeenCalledTimes(1);
       expect(mockGameInstance.ship.power).not.toHaveBeenCalled();
-      expect(gameView.shipFire).not.toHaveBeenCalled();
+      expect(mockGameInstance.ship.fireBullet).not.toHaveBeenCalled(); // Check underlying mock
     });
 
-    test('calls shipFire for space bar (32)', () => {
-      gameView.keyState[32] = true;
+    test('should call ship.fireBullet for key code 32 (space)', () => { // Updated description
+      gameView.keyState[32] = true; // Set key using key code
       gameView.assessKeys();
-      expect(gameView.shipFire).toHaveBeenCalledTimes(1);
+      // Check the underlying ship.fireBullet mock directly
+      expect(mockGameInstance.ship.fireBullet).toHaveBeenCalledTimes(1);
       expect(mockGameInstance.ship.power).not.toHaveBeenCalled();
       expect(mockGameInstance.ship.rotate).not.toHaveBeenCalled();
     });
 
-    test('handles multiple keys pressed simultaneously', () => {
+    test('should handle multiple keys simultaneously (using key codes)', () => {
       gameView.keyState[38] = true; // up
       gameView.keyState[37] = true; // left
       gameView.keyState[32] = true; // space
@@ -269,15 +311,16 @@ describe('GameView', () => {
       expect(mockGameInstance.ship.power).toHaveBeenCalledTimes(1);
       expect(mockGameInstance.ship.rotate).toHaveBeenCalledWith(-1);
       expect(mockGameInstance.ship.rotate).toHaveBeenCalledTimes(1);
-      expect(gameView.shipFire).toHaveBeenCalledTimes(1);
+      expect(mockGameInstance.ship.fireBullet).toHaveBeenCalledTimes(1); // Check underlying mock
     });
 
-    test('does nothing if no relevant keys are pressed', () => {
-      gameView.keyState = { 65: true, 90: true }; // A, Z
+    test('should do nothing if no relevant keys are active', () => {
+      gameView.keyState = {}; // Empty state
+      gameView.keyState[65] = true; // Add irrelevant key (A)
       gameView.assessKeys();
       expect(mockGameInstance.ship.power).not.toHaveBeenCalled();
       expect(mockGameInstance.ship.rotate).not.toHaveBeenCalled();
-      expect(gameView.shipFire).not.toHaveBeenCalled();
+      expect(mockGameInstance.ship.fireBullet).not.toHaveBeenCalled(); // Check underlying mock
     });
   });
 
